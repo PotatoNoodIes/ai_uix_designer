@@ -21,6 +21,12 @@ import {
   ReferenceAsset,
   ChatMessage,
 } from "./services/geminiService";
+import { UserButton } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
+import { useUsageLimit } from "./useUsageLimit";
+import { SignInNudge } from "./SignInNudge";
+import { UpgradePrompt } from "./UpgradePrompt";
+import { GateScreen } from "./GateScreen";
 
 // --- Types ---
 interface Project {
@@ -329,6 +335,11 @@ function Canvas() {
   const didInitialLayout = useRef(false);
   const isAiBusy = isGenerating || isGeneratingNewScreen || isModifying;
 
+  // --- Usage Limits ---
+  const [showNudge, setShowNudge] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const usage = useUsageLimit();
+
   // --- Persistence & Initialization ---
   useEffect(() => {
     const savedProjects = localStorage.getItem("stitch_v3_projects");
@@ -566,6 +577,12 @@ function Canvas() {
 
   // --- AI UIX ---
   const handleGenerate = async () => {
+    // --- Usage gate ---
+    if (!usage.canGenerate) {
+      if (usage.isSignedIn) setShowUpgrade(true);
+      else setShowNudge(true);
+      return;
+    }
     if (!input.trim() || isGenerating) return;
     if (!acquireAiLock()) return;
     setIsGenerating(true);
@@ -630,6 +647,8 @@ function Canvas() {
       setInput("");
       didInitialLayout.current = false;
       showSuccess("Architecture synthesized successfully");
+      // --- Increment usage count ---
+      await usage.incrementUsage();
     } catch (err: any) {
       console.error(err);
       showError(
@@ -1053,6 +1072,8 @@ function Canvas() {
               <div className="uix-wordmark">UIX <span>Agent</span></div>
             </div>
           </div>
+          <div className="flex items-center justify-between gap-1">
+            {/* icon toolbar */}
             <div className="flex items-center gap-0.5">
               <button onClick={() => { setCurrentProject(null); rfSetNodes([]); setMessages([]); }} className="uix-icon-btn" title="New Workspace">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -1079,6 +1100,58 @@ function Canvas() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               </button>
             </div>
+
+            {/* Clerk UserButton (only visible when signed in) */}
+            {usage.isSignedIn && (
+              <UserButton afterSignOutUrl={window.location.href} />
+            )}
+          </div>
+
+          {/* Usage counter pill */}
+          <div
+            className="flex items-center justify-between px-3 py-2 rounded-lg"
+            style={{
+              background: usage.isAtLimit
+                ? 'rgba(249,115,22,0.08)'
+                : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${usage.isAtLimit ? 'rgba(249,115,22,0.25)' : 'var(--panel-border)'}`,
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: usage.isAtLimit ? 'var(--accent)' : 'var(--brand)',
+                }}
+              />
+              <span className="uix-micro">
+                {usage.isSignedIn ? 'Free plan' : 'Demo'}
+              </span>
+            </div>
+            <button
+              className="uix-micro font-display font-700"
+              style={{
+                color: usage.isAtLimit ? 'var(--accent)' : 'var(--text-muted)',
+                cursor: usage.isAtLimit ? 'pointer' : 'default',
+              }}
+              onClick={() => {
+                if (usage.isAtLimit) {
+                  if (usage.isSignedIn) setShowUpgrade(true);
+                  else setShowNudge(true);
+                }
+              }}
+            >
+              {usage.isAtLimit
+                ? usage.isSignedIn ? 'Upgrade →' : 'Sign in →'
+                : usage.usageLabel}
+            </button>
+          </div>
+
+          {/* Nudge / Upgrade modals */}
+          {showNudge && <SignInNudge onDismiss={() => setShowNudge(false)} />}
+          {showUpgrade && <UpgradePrompt onDismiss={() => setShowUpgrade(false)} />}
         </header>
 
         <div className="flex-1 flex flex-col overflow-hidden" style={{background:'var(--panel-bg)'}}>
@@ -1346,7 +1419,10 @@ function Canvas() {
 }
 
 export default function App() {
+  const { isSignedIn, isLoaded } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
+  const [demoGranted, setDemoGranted] = useState<boolean>(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const checkMobile = () => {
@@ -1357,6 +1433,20 @@ export default function App() {
       return () => window.removeEventListener("resize", checkMobile);
     }
   }, []);
+
+  // Wait for Clerk to finish loading before deciding which screen to show.
+  // This prevents a flash of the gate screen for signed-in users on refresh.
+  if (!isLoaded) {
+    return (
+      <div
+        className="h-screen w-full flex items-center justify-center"
+        style={{ background: "var(--canvas-bg)" }}
+      >
+        <div className="uix-spinner" />
+      </div>
+    );
+  }
+
   if (isMobile) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center p-10 text-center" style={{background:'var(--canvas-bg)'}}>
@@ -1373,6 +1463,17 @@ export default function App() {
       </div>
     );
   }
+
+  // Authenticated users skip the gate
+  // Demo users with a valid sessionStorage grant also skip it
+  if (!isSignedIn && !demoGranted) {
+    return (
+      <GateScreen
+        onDemoGranted={() => setDemoGranted(true)}
+      />
+    );
+  }
+
   return (
     <ReactFlowProvider>
       <Canvas />
