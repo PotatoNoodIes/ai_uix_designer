@@ -8,14 +8,13 @@ const redis = new Redis({
 });
 
 const DEMO_LIMIT = 2;
-const TTL_SECONDS = 60 * 60 * 24; // 24 hours
+const TTL_SECONDS = 60 * 60 * 24;
 
 function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex");
 }
 
 function getClientIp(req: VercelRequest): string {
-  // x-forwarded-for may be a comma-separated list; take the first (original client)
   const forwarded = req.headers["x-forwarded-for"];
   if (forwarded) {
     const first = Array.isArray(forwarded) ? forwarded[0] : forwarded;
@@ -25,7 +24,10 @@ function getClientIp(req: VercelRequest): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST
+  if (process.env.NODE_ENV === 'development') {
+    return res.status(200).json({ allowed: true })
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -35,10 +37,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const key = `demo:ip:${hash}`;
 
   try {
-    // Atomically increment and read the count
     const count = await redis.incr(key);
 
-    // Set TTL only on first access (count === 1) so the window is per-first-visit
     if (count === 1) {
       await redis.expire(key, TTL_SECONDS);
     }
@@ -50,7 +50,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ allowed: true, count });
   } catch (err) {
     console.error("[demo-check] Redis error:", err);
-    // Fail open — don't block users if Redis is unreachable
     return res.status(200).json({ allowed: true, count: 0, error: "redis_unavailable" });
   }
 }
