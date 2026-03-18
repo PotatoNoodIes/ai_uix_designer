@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
 import { createHash } from "crypto";
 
@@ -14,42 +13,46 @@ function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex");
 }
 
-function getClientIp(req: VercelRequest): string {
-  const forwarded = req.headers["x-forwarded-for"];
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    const first = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-    return first.split(",")[0].trim();
+    return forwarded.split(",")[0].trim();
   }
-  return req.socket?.remoteAddress ?? "unknown";
+  return "unknown";
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (process.env.NODE_ENV === 'development') {
-    return res.status(200).json({ allowed: true })
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const ip = getClientIp(req);
-  const hash = hashIp(ip);
-  const key = `demo:ip:${hash}`;
-
-  try {
-    const count = await redis.incr(key);
-
-    if (count === 1) {
-      await redis.expire(key, TTL_SECONDS);
+const server = Bun.serve({
+  port: 3001,
+  async fetch(req) {
+    if (process.env.NODE_ENV === 'development') {
+      return Response.json({ allowed: true });
     }
 
-    if (count > DEMO_LIMIT) {
-      return res.status(200).json({ allowed: false, count });
+    if (req.method !== "POST") {
+      return Response.json({ error: "Method not allowed" }, { status: 405 });
     }
 
-    return res.status(200).json({ allowed: true, count });
-  } catch (err) {
-    console.error("[demo-check] Redis error:", err);
-    return res.status(200).json({ allowed: true, count: 0, error: "redis_unavailable" });
-  }
-}
+    const ip = getClientIp(req);
+    const hash = hashIp(ip);
+    const key = `demo:ip:${hash}`;
+
+    try {
+      const count = await redis.incr(key);
+
+      if (count === 1) {
+        await redis.expire(key, TTL_SECONDS);
+      }
+
+      if (count > DEMO_LIMIT) {
+        return Response.json({ allowed: false, count });
+      }
+
+      return Response.json({ allowed: true, count });
+    } catch (err) {
+      console.error("[demo-check] Redis error:", err);
+      return Response.json({ allowed: true, count: 0, error: "redis_unavailable" });
+    }
+  },
+});
+
+console.log(`[demo-check] listening on port ${server.port}`);
