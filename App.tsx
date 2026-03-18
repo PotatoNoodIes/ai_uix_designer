@@ -28,7 +28,6 @@ import { SignInNudge } from "./SignInNudge";
 import { UpgradePrompt } from "./UpgradePrompt";
 import { GateScreen } from "./GateScreen";
 
-// --- Types ---
 interface Project {
   id: string;
   name: string;
@@ -221,21 +220,21 @@ const ScreenNode = ({ data, selected }: NodeProps) => {
         </div>
       </NodeToolbar>
 
-      <div className={`uix-node-header flex items-center justify-between px-4 py-2.5 mb-2 group/header ${
+      <div className={`uix-node-header flex items-start justify-between px-5 py-4 mb-3 group/header shadow-lg ${
         data.locked ? "opacity-70" : ""
       }`}>
-        <div className="flex flex-col gap-0.5 pointer-events-none">
-          <span className="font-display font-700 text-[13px]" style={{color:'var(--text-primary)',letterSpacing:'-0.01em'}}>
+        <div className="flex flex-col gap-1 pointer-events-none">
+          <span className="font-display font-800 text-[18px] leading-none tracking-tight" style={{color:'var(--text-primary)'}}>
             {data.name}
           </span>
-          <span className="uix-micro truncate max-w-[240px]" style={{opacity:0.6}}>
+          <span className="uix-micro truncate max-w-[280px]" style={{opacity:0.6}}>
             {data.purpose}
           </span>
         </div>
-        <div className={`uix-icon-btn transition-all ${
+        <div className={`uix-icon-btn transition-all mt-0.5 ${
           selected ? "" : "opacity-0 group-hover/header:opacity-100"
         }`} style={selected ? {background:'var(--brand)',color:'#fff',borderColor:'transparent'} : {}}>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
         </div>
@@ -294,7 +293,6 @@ function Canvas() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const aiLockRef = useRef(false);
 
-  // Projects & History
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [past, setPast] = useState<Project[]>([]);
@@ -323,7 +321,6 @@ function Canvas() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
 
-  // Settings state (Persisted)
   const [selectedProvider, setSelectedProvider] =
     useState<AIProvider>("gemini");
   const [selectedModelId, setSelectedModelId] = useState(
@@ -335,12 +332,10 @@ function Canvas() {
   const didInitialLayout = useRef(false);
   const isAiBusy = isGenerating || isGeneratingNewScreen || isModifying;
 
-  // --- Usage Limits ---
   const [showNudge, setShowNudge] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const usage = useUsageLimit();
 
-  // --- Persistence & Initialization ---
   useEffect(() => {
     const savedProjects = localStorage.getItem("stitch_v3_projects");
     const savedTheme = localStorage.getItem("stitch_app_theme");
@@ -386,7 +381,6 @@ function Canvas() {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  // --- History Logic ---
   const pushToHistory = useCallback((current: Project | null) => {
     if (current) {
       setPast((prev) =>
@@ -432,18 +426,32 @@ function Canvas() {
     showSuccess("Workspace saved successfully");
   }, [currentProject]);
 
-  // --- Layout & Alignment ---
   const triggerAutoLayout = useCallback(() => {
     if (!currentProject) return;
     const nodeWidth = BREAKPOINT_WIDTHS[currentBreakpoint];
     const nodeHeight = BREAKPOINT_HEIGHTS[currentBreakpoint];
-    const horizontalSpacing = nodeWidth + 150;
-    const verticalSpacing = nodeHeight + 150;
-    const columns = currentBreakpoint === "desktop" ? 2 : 3;
+    
+    const horizontalSpacing = nodeWidth + 80;
+    const verticalSpacing = nodeHeight + 100;
+    
+    const columns = 2;
+    const numScreens = currentProject.data.screens.length;
+
     const updatedScreens = currentProject.data.screens.map(
       (s: any, idx: number) => {
-        const x = (idx % columns) * horizontalSpacing;
-        const y = Math.floor(idx / columns) * verticalSpacing;
+        const row = Math.floor(idx / columns);
+        const col = idx % columns;
+        const itemsInThisRow = Math.min(columns, numScreens - row * columns);
+        
+        let x = 0;
+        let y = row * verticalSpacing;
+        
+        if (itemsInThisRow === 1 && numScreens > 1) {
+          x = horizontalSpacing / 2;
+        } else {
+          x = col * horizontalSpacing;
+        }
+        
         return { ...s, position: { x, y } };
       }
     );
@@ -522,7 +530,6 @@ function Canvas() {
     aiLockRef.current = false;
   };
 
-  // --- Node Events ---
   const onNodeDragStop = useCallback((_: any, node: any) => {
     setCurrentProject((curr) => {
       if (!curr) return null;
@@ -575,9 +582,7 @@ function Canvas() {
     [pushToHistory]
   );
 
-  // --- AI UIX ---
   const handleGenerate = async () => {
-    // --- Usage gate ---
     if (!usage.canGenerate) {
       if (usage.isSignedIn) setShowUpgrade(true);
       else setShowNudge(true);
@@ -647,7 +652,6 @@ function Canvas() {
       setInput("");
       didInitialLayout.current = false;
       showSuccess("Architecture synthesized successfully");
-      // --- Increment usage count ---
       await usage.incrementUsage();
     } catch (err: any) {
       console.error(err);
@@ -798,7 +802,6 @@ function Canvas() {
     }
   };
 
-  // --- Node Syncing ---
   useEffect(() => {
     if (currentProject?.data?.screens) {
       const newNodes = currentProject.data.screens.map((screen: any) => {
@@ -935,13 +938,7 @@ function Canvas() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div
-      className={`h-screen flex overflow-hidden relative ${
-        appTheme === "dark"
-          ? "dark bg-slate-900 text-slate-50"
-          : "bg-white text-slate-900"
-      }`}
-    >
+    <div className={`h-screen w-full flex overflow-hidden bg-black text-white`}>
       <style>{`
         .modal-backdrop { backdrop-filter: blur(10px); background: rgba(0,0,0,0.65); }
         .chat-scroll::-webkit-scrollbar { width: 0; }
@@ -1060,240 +1057,153 @@ function Canvas() {
         </div>
       )}
 
-      <aside className="w-[420px] uix-sidebar flex flex-col z-50 shrink-0 overflow-hidden" style={{boxShadow:'2px 0 24px rgba(0,0,0,0.35)'}}>
-        <header className="px-5 py-4 flex flex-col gap-3" style={{borderBottom:'1px solid var(--sidebar-border)'}}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="uix-icon-badge">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="uix-wordmark">UIX <span>Agent</span></div>
+      {showNudge && <SignInNudge onDismiss={() => setShowNudge(false)} />}
+      {showUpgrade && <UpgradePrompt onDismiss={() => setShowUpgrade(false)} />}
+
+      <div className="w-[500px] h-full flex flex-col border-r border-[var(--border)] bg-[#050505] z-[5000] shrink-0">
+        <div className="p-8 flex flex-col gap-6 w-full shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-lime flex items-center justify-center p-0.5" style={{boxShadow: '2px 2px 0 var(--border)'}}>
+              <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
             </div>
+            <div className="brutal-display text-[24px]">UIX</div>
           </div>
-          <div className="flex items-center justify-between gap-1">
-            {/* icon toolbar */}
-            <div className="flex items-center gap-0.5">
-              <button onClick={() => { setCurrentProject(null); rfSetNodes([]); setMessages([]); }} className="uix-icon-btn" title="New Workspace">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              </button>
-              <button onClick={() => setIsHistoryOpen(true)} className="uix-icon-btn" title="Workspace History">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </button>
-              <button onClick={() => setAppTheme((prev) => (prev === "light" ? "dark" : "light"))} className="uix-icon-btn" title="Toggle Theme">
-                {appTheme === "light" ? (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                )}
-              </button>
-              <button onClick={() => setIsSettingsOpen(true)} className="uix-icon-btn" title="Model Settings">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              </button>
-              <div className="uix-divider w-px h-5 mx-1" />
-              <label className="uix-icon-btn cursor-pointer" title="Import History">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+
+          <div className="brutal-panel p-4 flex flex-col gap-3" style={{border: '1px solid var(--border)', background: 'var(--bg)'}}>
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => { setCurrentProject(null); rfSetNodes([]); setMessages([]); }} className="brutal-ghost" title="New Workspace">[NEW]</button>
+              <button onClick={() => setIsHistoryOpen(true)} className="brutal-ghost" title="History">[HST]</button>
+              <button onClick={() => setIsSettingsOpen(true)} className="brutal-ghost" title="Settings">[CFG]</button>
+              <label className="brutal-ghost cursor-pointer" title="Import History">
+                [IMP]
                 <input type="file" className="hidden" accept=".json" onChange={handleImportHistory} />
               </label>
-              <button onClick={handleExportHistory} className="uix-icon-btn" title="Export History">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              <button onClick={handleExportHistory} className="brutal-ghost" title="Export History">[EXP]</button>
+            </div>
+
+            <div className="mt-2 pt-3 border-t flex items-center justify-between" style={{borderColor: 'var(--border)'}}>
+              <span className="brutal-micro">{usage.isSignedIn ? 'PRO' : 'DEMO'}</span>
+              <button
+                className="brutal-ghost"
+                style={{color: 'var(--lime)', padding: 0}}
+                onClick={() => {
+                  if (usage.isAtLimit) {
+                    if (usage.isSignedIn) setShowUpgrade(true);
+                    else setShowNudge(true);
+                  }
+                }}
+              >
+                {usage.isAtLimit
+                  ? usage.isSignedIn ? 'UPGRADE' : 'SIGN IN'
+                  : usage.usageLabel}
               </button>
             </div>
-
-            {/* Clerk UserButton (only visible when signed in) */}
-            {usage.isSignedIn && (
+          </div>
+          
+          {usage.isSignedIn && (
+            <div className="pl-1">
               <UserButton afterSignOutUrl={window.location.href} />
-            )}
-          </div>
-
-          {/* Usage counter pill */}
-          <div
-            className="flex items-center justify-between px-3 py-2 rounded-lg"
-            style={{
-              background: usage.isAtLimit
-                ? 'rgba(249,115,22,0.08)'
-                : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${usage.isAtLimit ? 'rgba(249,115,22,0.25)' : 'var(--panel-border)'}`,
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: usage.isAtLimit ? 'var(--accent)' : 'var(--brand)',
-                }}
-              />
-              <span className="uix-micro">
-                {usage.isSignedIn ? 'Free plan' : 'Demo'}
-              </span>
             </div>
-            <button
-              className="uix-micro font-display font-700"
-              style={{
-                color: usage.isAtLimit ? 'var(--accent)' : 'var(--text-muted)',
-                cursor: usage.isAtLimit ? 'pointer' : 'default',
-              }}
-              onClick={() => {
-                if (usage.isAtLimit) {
-                  if (usage.isSignedIn) setShowUpgrade(true);
-                  else setShowNudge(true);
-                }
-              }}
-            >
-              {usage.isAtLimit
-                ? usage.isSignedIn ? 'Upgrade →' : 'Sign in →'
-                : usage.usageLabel}
-            </button>
-          </div>
+          )}
+        </div>
 
-          {/* Nudge / Upgrade modals */}
-          {showNudge && <SignInNudge onDismiss={() => setShowNudge(false)} />}
-          {showUpgrade && <UpgradePrompt onDismiss={() => setShowUpgrade(false)} />}
-        </header>
-
-        <div className="flex-1 flex flex-col overflow-hidden" style={{background:'var(--panel-bg)'}}>
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 chat-scroll">
-            {messages.length === 0 && (
-              <div className="h-full flex flex-col justify-end pb-4 gap-2">
-                <p className="uix-label" style={{marginBottom:8}}>Try a prompt</p>
-                {["Fintech dashboard with analytics","Mobile food delivery onboarding flow","SaaS admin panel with dark mode"].map(p => (
-                  <button key={p} className="uix-starter-chip" onClick={() => setInput(p)}>
-                    {p} →
-                  </button>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden px-8 pb-8 justify-end">
+          <div className="flex flex-col gap-4 w-full h-full justify-end">
+            {messages.length > 0 && (
+              <div className="brutal-panel flex flex-col flex-1 overflow-y-auto chat-scroll p-4 gap-4" style={{borderBottom:'none', boxShadow:'none'}}>
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-start" : "items-end"}`}>
+                    <span className="brutal-micro px-2">{msg.role === "user" ? "USER" : "SYS"}</span>
+                    <div className={`max-w-[90%] text-sm leading-relaxed ${msg.role === "user" ? "brutal-bubble-user" : "brutal-bubble-ai"}`}>
+                      <MarkdownContent content={msg.content} />
+                    </div>
+                  </div>
                 ))}
+                <div ref={chatEndRef} />
               </div>
             )}
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex flex-col ${
-                  msg.role === "user" ? "items-end" : "items-start"
-                } animate-in fade-in slide-in-from-bottom-2 duration-300`}
-              >
-                <div className={`max-w-[88%] px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === "user" ? "uix-bubble-user" : "uix-bubble-ai"
-                  }`}
-                >
-                  <MarkdownContent content={msg.content} />
+            
+            <div className="brutal-panel p-4 flex flex-col gap-4 bg-black shrink-0">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                <span className="brutal-micro">ENGINE: {(selectedModelId === "custom" ? customModelId : selectedModelId)}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => setArchitecture("web")} className={`brutal-ghost ${architecture === "web" ? "text-lime" : ""}`}>WEB</button>
+                  <button onClick={() => setArchitecture("app")} className={`brutal-ghost ${architecture === "app" ? "text-lime" : ""}`}>APP</button>
                 </div>
-                <span className="uix-label mt-1.5 px-1" style={{opacity:0.5}}>
-                  {msg.role === "user" ? "You" : "UIX Agent"}
-                </span>
               </div>
-            ))}
-            <div ref={chatEndRef} />
-          </div>
 
-          <div className="px-5 py-4 flex flex-col gap-3" style={{borderTop:'1px solid var(--sidebar-border)',background:'var(--sidebar-bg)'}}>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col gap-0.5">
-                <span className="uix-label">Architecture</span>
-                <span className="uix-micro" style={{color:'var(--brand)',fontSize:10}}>
-                  {(selectedModelId === "custom" ? customModelId : selectedModelId)} Active
-                </span>
-              </div>
-              <div style={{flex:1}} />
-              <div className="uix-segment">
-                <button onClick={() => setArchitecture("web")} className={`uix-segment-btn ${architecture === "web" ? "active" : ""}`}>Web</button>
-                <button onClick={() => setArchitecture("app")} className={`uix-segment-btn ${architecture === "app" ? "active" : ""}`}>App</button>
-              </div>
-              <div className="uix-segment">
-                <button onClick={() => setProductTheme("light")} className={`uix-segment-btn ${productTheme === "light" ? "active" : ""}`}>Light</button>
-                <button onClick={() => setProductTheme("dark")} className={`uix-segment-btn ${productTheme === "dark" ? "active" : ""}`}>Dark</button>
-              </div>
-            </div>
+              {messages.length === 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {["Fintech dashboard with analytics","Mobile food delivery onboarding flow","SaaS admin panel with dark mode"].map(p => (
+                     <button key={p} className="brutal-ghost border border-[var(--border)] px-3 py-2 text-left" onClick={() => setInput(p)}>{p}</button>
+                  ))}
+                </div>
+              )}
 
-            <div className="flex gap-2 items-end">
-                <label
-                  className="uix-icon-btn cursor-pointer flex-shrink-0" style={{width:40,height:40,borderRadius:'var(--r-sm)',border:'1px solid var(--panel-border)'}}
-                  title="Add Assets"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+              <div className="flex gap-3">
+                <label className="brutal-btn flex items-center justify-center p-3" style={{background: 'var(--surface)', color:'var(--fg)'}}>
+                  [+]
                   <input type="file" className="hidden" accept="image/*,.html" multiple onChange={handleFileReferenceChange} />
                 </label>
                 <div className="flex-1 relative">
                   <textarea
+                    autoFocus
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleGenerate();
-                      }
+                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleGenerate(); }
                     }}
-                    placeholder="Describe your vision…"
-                    className="uix-textarea w-full min-h-[52px] max-h-32 p-3 pr-14"
+                    placeholder="EXECUTE VISION..."
+                    className="brutal-input w-full min-h-[56px] pr-[100px]"
                   />
                   <button
                     onClick={handleGenerate}
                     disabled={isGenerating || !input.trim() || isAiBusy}
-                    className={`absolute right-2 bottom-2 w-9 h-9 flex items-center justify-center uix-btn-send`}
+                    className="absolute right-2 bottom-2 top-2 w-[80px] brutal-btn bg-lime text-black border-lime"
                   >
-                    {isGenerating ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    )}
+                    {isGenerating ? "..." : "RUN"}
                   </button>
                 </div>
               </div>
+            </div>
           </div>
         </div>
-      </aside>
+      </div>
 
-      <main className="flex-1 flex flex-col relative" style={{background:'var(--canvas-bg)'}}>
-        <nav className="h-14 uix-topnav flex items-center justify-between px-6 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="uix-label" style={{opacity:0.4}}>Workspace</span>
-              <span className="uix-label" style={{opacity:0.3}}>/</span>
-              <span className="uix-label" style={{color:'var(--text-primary)',opacity:1}}>
-                {currentProject?.name || "Infinite Canvas"}
-              </span>
+      <main className="flex-1 relative z-0" style={{background:'var(--canvas-bg)'}}>
+        
+        <nav className="absolute top-8 right-8 z-[4000] flex flex-col items-end gap-3 w-[260px]">
+          <div className="brutal-panel p-3 flex flex-col gap-3 w-full" style={{border: '1px solid var(--border)', background: 'var(--bg)'}}>
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <span className="brutal-micro">WORKSPACE</span>
+              <span className="brutal-micro text-white text-right truncate pl-2">{currentProject?.name || "VOID"}</span>
             </div>
             {currentProject && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setIsAddingScreen(true)}
-                  className="uix-btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-[10px]"
+                  className="brutal-btn w-full flex items-center justify-center"
                   disabled={isAiBusy}
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-                  Add Screen
+                  [+] ADD SCREEN
                 </button>
-                <button
-                  onClick={handleSaveSnapshot}
-                  className="uix-btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-[10px]"
-                  disabled={isAiBusy}
-                  title="Save current workspace state"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                  Save
-                </button>
-                <button
-                  onClick={handleExportZip}
-                  className="uix-btn-brand flex items-center gap-1.5 px-3 py-1.5 text-[10px]"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                  Export ZIP
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleSaveSnapshot} className="brutal-ghost flex-1 text-center" disabled={isAiBusy}>SAVE</button>
+                  <button onClick={handleExportZip} className="brutal-ghost flex-1 text-center text-lime">EXPORT</button>
+                </div>
               </div>
             )}
           </div>
-          <div className="uix-segment">
-            <button onClick={() => setCurrentBreakpoint("desktop")} className={`uix-segment-btn ${currentBreakpoint === "desktop" ? "active" : ""}`}>Desktop</button>
-            <button onClick={() => setCurrentBreakpoint("tablet")} className={`uix-segment-btn ${currentBreakpoint === "tablet" ? "active" : ""}`}>Tablet</button>
-            <button onClick={() => setCurrentBreakpoint("mobile")} className={`uix-segment-btn ${currentBreakpoint === "mobile" ? "active" : ""}`}>Mobile</button>
+          
+          <div className="brutal-panel p-2 flex gap-2 w-full" style={{border: '1px solid var(--border)', background: 'var(--bg)'}}>
+            <button onClick={() => setCurrentBreakpoint("desktop")} className={`brutal-ghost flex-1 text-center ${currentBreakpoint === "desktop" ? "text-lime bg-white !text-black" : ""}`}>DSK</button>
+            <button onClick={() => setCurrentBreakpoint("tablet")} className={`brutal-ghost flex-1 text-center ${currentBreakpoint === "tablet" ? "text-lime bg-white !text-black" : ""}`}>TAB</button>
+            <button onClick={() => setCurrentBreakpoint("mobile")} className={`brutal-ghost flex-1 text-center ${currentBreakpoint === "mobile" ? "text-lime bg-white !text-black" : ""}`}>MOB</button>
           </div>
         </nav>
-        <div className="flex-1 relative">
+        <div className="absolute inset-0 z-0">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -1312,8 +1222,8 @@ function Canvas() {
               color={appTheme === "dark" ? "#1a2033" : "#d1d5db"}
             />
             {isAddingScreen && (
-              <Panel position="top-center" className="mt-4">
-                <div className="uix-add-panel p-6 w-[380px] animate-in slide-in-from-top-4 duration-300">
+              <Panel position="top-center" className="mt-6">
+                <div className="uix-add-panel p-6 w-[400px] animate-in slide-in-from-top-4 duration-300" style={{boxShadow: 'var(--shadow-panel)'}}>
                   <header className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div style={{width:6,height:6,borderRadius:'50%',background:'var(--brand)'}} />
@@ -1339,25 +1249,17 @@ function Canvas() {
                 </div>
               </Panel>
             )}
-            <Panel position="bottom-center" className="mb-8">
-              <div className="uix-canvas-toolbar flex items-center gap-1 p-1.5">
-                <button onClick={undo} disabled={past.length === 0} className="uix-canvas-toolbar-btn" title="Undo">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                </button>
-                <button onClick={redo} disabled={future.length === 0} className="uix-canvas-toolbar-btn" title="Redo">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" /></svg>
-                </button>
-                <div className="uix-divider w-px h-5 mx-0.5" />
-                <button onClick={() => zoomIn()} className="uix-canvas-toolbar-btn" title="Zoom In">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M12 4v16m8-8H4" /></svg>
-                </button>
-                <button onClick={() => zoomOut()} className="uix-canvas-toolbar-btn" title="Zoom Out">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M20 12H4" /></svg>
-                </button>
-                <div className="uix-divider w-px h-5 mx-0.5" />
-                <button onClick={() => fitView({ padding: 0.2, duration: 800 })} className="uix-canvas-toolbar-btn" title="Fit to View">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-                </button>
+            <Panel position="bottom-right" className="mb-8 mr-8 z-[3000]">
+              <div className="flex flex-col gap-2">
+                <div className="brutal-panel flex flex-col bg-black overflow-hidden pt-2" style={{border: '1px solid var(--border)'}}>
+                  <button onClick={() => zoomIn()} className="brutal-ghost border-b border-[var(--border)] p-3 hover:bg-white hover:text-black" title="Zoom In">+</button>
+                  <button onClick={() => zoomOut()} className="brutal-ghost border-b border-[var(--border)] p-3 hover:bg-white hover:text-black" title="Zoom Out">-</button>
+                  <button onClick={() => fitView({ padding: 0.2, duration: 800 })} className="brutal-ghost p-3 text-[10px] hover:bg-white hover:text-black" title="Fit">FIT</button>
+                </div>
+                <div className="brutal-panel flex flex-col bg-black mt-2 overflow-hidden" style={{border: '1px solid var(--border)'}}>
+                  <button onClick={undo} disabled={past.length === 0} className="brutal-ghost border-b border-[var(--border)] p-3 disabled:opacity-30 hover:bg-white hover:text-black" title="Undo">{"<"}</button>
+                  <button onClick={redo} disabled={future.length === 0} className="brutal-ghost p-3 disabled:opacity-30 hover:bg-white hover:text-black" title="Redo">{">"}</button>
+                </div>
               </div>
             </Panel>
             {isGenerating && (
@@ -1434,8 +1336,6 @@ export default function App() {
     }
   }, []);
 
-  // Wait for Clerk to finish loading before deciding which screen to show.
-  // This prevents a flash of the gate screen for signed-in users on refresh.
   if (!isLoaded) {
     return (
       <div
@@ -1464,8 +1364,6 @@ export default function App() {
     );
   }
 
-  // Authenticated users skip the gate
-  // Demo users with a valid sessionStorage grant also skip it
   if (!isSignedIn && !demoGranted) {
     return (
       <GateScreen

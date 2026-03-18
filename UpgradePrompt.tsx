@@ -7,120 +7,66 @@ interface UpgradePromptProps {
 
 export function UpgradePrompt({ onDismiss }: UpgradePromptProps) {
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center modal-backdrop animate-in fade-in">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
       <div
-        className="uix-modal w-full max-w-md p-8 flex flex-col gap-5 animate-in zoom-in-95"
+        className="brutal-panel w-full max-w-md p-8 flex flex-col gap-6 bg-black"
+        style={{border: '2px solid var(--border)', boxShadow: '8px 8px 0 var(--lime)'}}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* header */}
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "var(--brand)",
-                }}
-              />
-              <span className="uix-label" style={{ color: "var(--brand)" }}>
-                All designs used
-              </span>
-            </div>
-            <h2
-              className="font-display font-800 text-xl leading-snug"
-              style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
-            >
-              {"You've used all 5 free designs"}
+          <div className="flex flex-col gap-2">
+            <span className="brutal-micro text-lime">LIMIT REACHED</span>
+            <h2 className="brutal-display text-[32px] uppercase">
+              ALL 5 DESIGNS USED
             </h2>
-            <p
-              className="uix-micro mt-2"
-              style={{ lineHeight: 1.65, opacity: 0.7 }}
-            >
-              Upgrade for unlimited designs, priority generation, and team
-              workspaces.
+            <p className="brutal-micro opacity-70">
+              Upgrade for unlimited designs, priority queue, and team workspaces.
             </p>
           </div>
-          <button className="uix-icon-btn shrink-0" onClick={onDismiss}>
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <button className="brutal-ghost p-2" onClick={onDismiss}>[X]</button>
         </div>
 
-        {/* feature list */}
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 p-4 border border-[var(--border)] bg-[#050505]">
           {[
             "Unlimited AI-generated designs",
             "Priority generation queue",
             "Team workspaces & sharing",
             "Export to Figma (coming soon)",
           ].map((f) => (
-            <li key={f} className="flex items-center gap-2.5">
-              <svg
-                className="w-3.5 h-3.5 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                style={{ color: "var(--brand)" }}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <span className="uix-micro">{f}</span>
+            <li key={f} className="flex items-center gap-3">
+              <span className="text-lime font-mono">»</span>
+              <span className="brutal-micro">{f}</span>
             </li>
           ))}
         </ul>
 
-        {/* CTAs */}
-        <div className="flex flex-col gap-3 mt-1">
+        <div className="flex flex-col gap-3 mt-2">
           <button
-            className="uix-btn-brand w-full py-3 text-sm font-display font-700"
-            style={{ borderRadius: "var(--r-sm)" }}
+            className="brutal-btn w-full bg-lime border-lime text-black"
             onClick={() => {
-              /* placeholder — wire up payment link here */
               alert("Upgrade flow coming soon!");
             }}
           >
-            Upgrade to Pro →
+            UPGRADE TO PRO
           </button>
           <button
-            className="uix-btn-ghost w-full py-2.5 text-xs"
-            style={{ borderRadius: "var(--r-sm)" }}
+            className="brutal-ghost w-full border border-[var(--border)]"
             onClick={onDismiss}
           >
-            Maybe later
+            LATER
           </button>
         </div>
 
-        {/* account area */}
         <div
-          className="flex items-center gap-3 pt-4"
-          style={{ borderTop: "1px solid var(--panel-border)" }}
+          className="flex items-center gap-3 pt-4 border-t border-[var(--border)]"
         >
           <UserButton afterSignOutUrl={window.location.href} />
-          <span className="uix-micro" style={{ opacity: 0.5 }}>
-            Signed in
+          <span className="brutal-micro opacity-50">
+            PRO ACCOUNT ENGINES ENABLED
           </span>
         </div>
       </div>
 
-      {/* backdrop click to dismiss */}
       <div className="absolute inset-0 -z-10" onClick={onDismiss} />
     </div>
   );

@@ -20,10 +20,9 @@ export interface UsageLimitResult {
 export function useUsageLimit(): UsageLimitResult {
   const { isSignedIn, user, isLoaded } = useUser();
 
-  // ── Demo (not signed in) ──────────────────────────────────────────────────
   if (!isLoaded || !isSignedIn) {
     const used = parseInt(localStorage.getItem(DEMO_KEY) || "0", 10);
-    const isAtLimit = used >= DEMO_LIMIT;
+    const isAtLimit = import.meta.env.DEV ? false : used >= DEMO_LIMIT;
 
     const incrementUsage = async () => {
       const next = used + 1;
@@ -42,10 +41,9 @@ export function useUsageLimit(): UsageLimitResult {
     };
   }
 
-  // ── Signed in (free tier) ─────────────────────────────────────────────────
   const meta = (user.unsafeMetadata as { design_count?: number }) ?? {};
   const used = typeof meta.design_count === "number" ? meta.design_count : 0;
-  const isAtLimit = used >= FREE_LIMIT;
+  const isAtLimit = import.meta.env.DEV ? false : used >= FREE_LIMIT;
 
   const incrementUsage = async () => {
     await user.update({

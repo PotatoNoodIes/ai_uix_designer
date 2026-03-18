@@ -9,74 +9,38 @@ export function SignInNudge({ onDismiss }: SignInNudgeProps) {
   const [showSignIn, setShowSignIn] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center modal-backdrop animate-in fade-in">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
       <div
-        className="uix-modal w-full max-w-md p-8 flex flex-col gap-5 animate-in zoom-in-95"
+        className="brutal-panel w-full max-w-md p-8 flex flex-col gap-6 bg-black"
+        style={{border: '2px solid var(--border)', boxShadow: '8px 8px 0 var(--border)'}}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* header */}
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "var(--accent)",
-                }}
-              />
-              <span className="uix-label" style={{ color: "var(--accent)" }}>
-                Free previews used
-              </span>
-            </div>
-            <h2
-              className="font-display font-800 text-xl leading-snug"
-              style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
-            >
-              {"You've used your 2 free previews"}
+          <div className="flex flex-col gap-2">
+            <span className="brutal-micro text-white">DEMO COMPLETE</span>
+            <h2 className="brutal-display text-[32px] uppercase">
+              ALL 2 PREVIEWS USED
             </h2>
-            <p
-              className="uix-micro mt-2"
-              style={{ lineHeight: 1.65, opacity: 0.7 }}
-            >
-              Sign in to unlock 5 designs and save your workspace across
-              sessions.
+            <p className="brutal-micro opacity-70">
+              Sign in to unlock 5 designs and save your workspace across sessions.
             </p>
           </div>
-          <button className="uix-icon-btn shrink-0" onClick={onDismiss}>
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <button className="brutal-ghost p-2" onClick={onDismiss}>[X]</button>
         </div>
 
-        {/* CTA or Clerk SignIn */}
         {!showSignIn ? (
           <div className="flex flex-col gap-3">
             <button
-              className="uix-btn-brand w-full py-3 text-sm font-display font-700"
-              style={{ borderRadius: "var(--r-sm)" }}
+              className="brutal-btn w-full bg-white border-white text-black"
               onClick={() => setShowSignIn(true)}
             >
-              Sign in / Create account
+              SIGN IN / REGISTER
             </button>
             <button
-              className="uix-btn-ghost w-full py-2.5 text-xs"
-              style={{ borderRadius: "var(--r-sm)" }}
+              className="brutal-ghost w-full border border-[var(--border)]"
               onClick={onDismiss}
             >
-              Maybe later
+              LATER
             </button>
           </div>
         ) : (
@@ -90,7 +54,6 @@ export function SignInNudge({ onDismiss }: SignInNudgeProps) {
         )}
       </div>
 
-      {/* backdrop click to dismiss */}
       <div className="absolute inset-0 -z-10" onClick={onDismiss} />
     </div>
   );

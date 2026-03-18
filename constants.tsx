@@ -2,12 +2,12 @@
 import React from 'react';
 
 export const COLORS = {
-  primary: '#6366f1', // Indigo 500
-  secondary: '#06b6d4', // Cyan 500
-  accent: '#f43f5e', // Rose 500
-  background: '#020617', // Slate 950
-  surface: '#0f172a', // Slate 900
-  surfaceLighter: '#1e293b', // Slate 800
+  primary: '#6366f1', 
+  secondary: '#06b6d4', 
+  accent: '#f43f5e', 
+  background: '#020617', 
+  surface: '#0f172a', 
+  surfaceLighter: '#1e293b', 
 };
 
 export const NAVIGATION_ITEMS = [
