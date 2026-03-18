@@ -10,7 +10,7 @@ type DemoState = "idle" | "checking" | "blocked";
 
 async function checkDemoAccess(): Promise<{ allowed: boolean }> {
   try {
-    const res = await fetch("/api/demo-check", {
+    const res = await fetch("/uix/api/demo-check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     });
