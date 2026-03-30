@@ -7,7 +7,7 @@ const redis = new Redis({
 });
 
 const DEMO_LIMIT = 2;
-const TTL_SECONDS = 60 * 60 * 24;
+const TTL_SECONDS = 60 * 60 * 24 * 5;
 
 function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex");

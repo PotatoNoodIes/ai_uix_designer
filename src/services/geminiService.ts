@@ -1,8 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { formatChatHistory } from "@/utils/chatHistory";
 
-/* =========================
-   TYPES
-========================= */
+
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -47,12 +46,10 @@ export type GeneratedUI = {
     to: string;
     label: string;
   }[];
-  assistantMessage: string; // Dynamic message explaining the design choices
+  assistantMessage: string;
 };
 
-/* =========================
-   PROMPT CONSTANTS
-========================= */
+
 
 const GENERATION_SYSTEM_PROMPT = `
 You are an elite cross-platform UI/UX designer creating Dribbble-quality HTML for BOTH mobile and web using Tailwind CSS and CSS variables.
@@ -106,9 +103,7 @@ Return JSON describing responsive screens.
 - Navigation structure MUST be identical across screens.
 `;
 
-/* =========================
-   CORE AI CALLER
-========================= */
+
 
 async function callAI(
   systemInstruction: string,
@@ -212,9 +207,7 @@ ${
     : "No existing screens."
 }
 # CHAT CONTEXT
-${config.chatHistory
-  ?.map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-  .join("\n")}
+${formatChatHistory(config.chatHistory)}
 `;
 
   const userPrompt = `USER REQUEST: "${prompt}"`;
@@ -381,7 +374,7 @@ export async function modifyScreen(
 Refine screen: ${screenName}
 INSTRUCTION: ${instruction}
 # CONTEXT
-${chatHistory?.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n")}
+${formatChatHistory(chatHistory)}
 ${GENERATION_SYSTEM_PROMPT}
 CURRENT MARKUP:
 ${currentMarkup}
@@ -411,11 +404,3 @@ ${currentMarkup}
   return JSON.parse(responseText);
 }
 
-export async function refinePrompt(roughPrompt: string): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Refine app idea: "${roughPrompt}"`,
-  });
-  return response.text.trim();
-}
