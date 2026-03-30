@@ -32,7 +32,7 @@ npm install
 
 Create a `.env` file in the root:
 ```env
-VITE_GEMINI_API_KEY=your_google_gemini_api_key
+GEMINI_API_KEY=your_google_gemini_api_key
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key_here
 UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your_upstash_token_here
