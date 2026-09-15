@@ -43,7 +43,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/*,api/*,package.json,package-lock.json"
+          source: "dist/*,api,package.json,package-lock.json,ecosystem.config.cjs"
           target: "/home/jose/uix-agent"
           overwrite: true
 
@@ -73,8 +73,26 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /home/jose/uix-agent
             npm ci --omit=dev
+
+            # Load the env written in the previous step into this shell so pm2
+            # inherits it. pm2 does not read .env on its own.
+            set -a
+            . ./.env
+            set +a
+
             pm2 restart uix-agent
-            # --update-env re-reads the env file written above.
-            pm2 restart uix-api --update-env
+
+            # The uix-api process was originally created pointing at
+            # api/demo-check.ts under the bun interpreter. That file no longer
+            # exists, so a plain `pm2 restart` would resurrect a dead
+            # definition. Delete and recreate from the ecosystem file instead.
+            pm2 delete uix-api || true
+            pm2 start ecosystem.config.cjs --only uix-api --update-env
+            pm2 save
+
+            # Fail the deploy if the API did not come up.
+            sleep 3
+            curl -fsS http://localhost:3001/health

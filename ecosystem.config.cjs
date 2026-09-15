@@ -1,9 +1,10 @@
 /**
  * PM2 process definitions.
  *
- * pm2 does not read .env on its own, so the API process points at the file
- * explicitly. Without this the server starts with no GEMINI_API_KEY and
- * /generate fails.
+ * pm2 does not read .env on its own. The deploy script sources .env into the
+ * shell before `pm2 start`, and env_file is declared here as a second line of
+ * defence on pm2 >= 5.2. Without either, the server starts with no
+ * GEMINI_API_KEY and /generate fails.
  */
 module.exports = {
   apps: [
