@@ -16,9 +16,6 @@ jobs:
         with:
           node-version: '20'
 
-      # The frontend build takes NO secrets. Only VITE_-prefixed vars reach the
-      # bundle, and the only one is Clerk's publishable key, which is public by
-      # design. Server secrets are written straight to the server below.
       - name: Install & Build
         run: |
           npm ci
@@ -47,8 +44,6 @@ jobs:
           target: "/home/jose/uix-agent"
           overwrite: true
 
-      # Server-side secrets live only on the server, read at runtime by the Bun
-      # API process. They are never present at build time.
       - name: Write server environment
         uses: appleboy/ssh-action@master
         with:
@@ -77,22 +72,15 @@ jobs:
             cd /home/jose/uix-agent
             npm ci --omit=dev
 
-            # Load the env written in the previous step into this shell so pm2
-            # inherits it. pm2 does not read .env on its own.
             set -a
             . ./.env
             set +a
 
             pm2 restart uix-agent
 
-            # The uix-api process was originally created pointing at
-            # api/demo-check.ts under the bun interpreter. That file no longer
-            # exists, so a plain `pm2 restart` would resurrect a dead
-            # definition. Delete and recreate from the ecosystem file instead.
             pm2 delete uix-api || true
             pm2 start ecosystem.config.cjs --only uix-api --update-env
             pm2 save
 
-            # Fail the deploy if the API did not come up.
             sleep 3
             curl -fsS http://localhost:3001/health
