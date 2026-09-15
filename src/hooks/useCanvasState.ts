@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { UsageLimitError } from "@/services/aiClient";
 import { useNodesState, useEdgesState, useReactFlow } from "reactflow";
 import JSZip from "jszip";
 import {
@@ -254,6 +255,21 @@ export function useCanvasState({
     [pushToHistory]
   );
 
+  /**
+   * The server is the authority on quota, so a 429 can arrive even when the
+   * local counter looked fine (another tab, another device, a stale cache).
+   * Route those to the same modals the pre-flight check uses.
+   */
+  const handleAiError = (err: any, fallback: string) => {
+    if (err instanceof UsageLimitError) {
+      if (err.limitType === "free") setShowUpgrade(true);
+      else setShowNudge(true);
+      void usage.incrementUsage();
+      return;
+    }
+    showError(err?.message || fallback);
+  };
+
   const handleGenerate = async () => {
     if (!usage.canGenerate) {
       if (usage.isSignedIn) setShowUpgrade(true);
@@ -323,7 +339,7 @@ export function useCanvasState({
       setMobilePanel("canvas");
       await usage.incrementUsage();
     } catch (err: any) {
-      showError(err.message || "UIX failed. Please check your API key or connection.");
+      handleAiError(err, "UIX failed. Please check your connection.");
     } finally {
       setIsGenerating(false);
       releaseAiLock();
@@ -377,7 +393,7 @@ export function useCanvasState({
       setModifyInput("");
       showSuccess("Screen refined successfully");
     } catch (err: any) {
-      showError(err.message || "Refinement failed.");
+      handleAiError(err, "Refinement failed.");
     } finally {
       setIsModifying(false);
       releaseAiLock();
@@ -438,7 +454,7 @@ export function useCanvasState({
       fitView({ nodes: [{ id: newScreen.id }], padding: 0.4, duration: 700 });
       showSuccess("New screen synthesized");
     } catch (err: any) {
-      showError(err.message || "Generation failed.");
+      handleAiError(err, "Generation failed.");
     } finally {
       setIsGeneratingNewScreen(false);
       releaseAiLock();
