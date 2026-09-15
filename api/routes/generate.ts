@@ -1,4 +1,4 @@
-import { callGemini, type GeminiPart } from "../lib/gemini.ts";
+import { callGemini, ProviderError, type GeminiPart } from "../lib/gemini.ts";
 import { getUserId } from "../lib/clerk.ts";
 import {
   consumeQuota,
@@ -6,6 +6,7 @@ import {
   getClientIp,
   type QuotaIdentity,
 } from "../lib/quota.ts";
+import { redact } from "../lib/redact.ts";
 import { resolveServerModel } from "../shared/models.ts";
 import {
   buildProductPrompt,
@@ -179,8 +180,12 @@ export async function handleGenerate(req: Request): Promise<Response> {
         );
       } catch (err) {
         if (quota) await refundQuota(identity);
-        console.error("[generate] generation failed:", err);
-        send(`data: ${JSON.stringify({ error: "Generation failed. Please try again." })}\n\n`);
+        const message =
+          err instanceof ProviderError ? err.safeMessage : "Generation failed. Please try again.";
+        if (!(err instanceof ProviderError)) {
+          console.error("[generate] generation failed:", redact(err));
+        }
+        send(`data: ${JSON.stringify({ error: message })}\n\n`);
       } finally {
         clearInterval(heartbeat);
         try {
