@@ -57,18 +57,60 @@ export async function requestGeneration<T>(body: GenerateRequest): Promise<T> {
     body: JSON.stringify(body),
   });
 
-  const payload = await res.json().catch(() => null);
+  const contentType = res.headers.get("content-type") ?? "";
 
-  if (res.status === 429 && payload?.error === "limit_reached") {
-    publishUsage(payload.usage);
-    throw new UsageLimitError(payload.limitType ?? "demo", payload.usage ?? null);
-  }
+  if (!contentType.includes("text/event-stream")) {
+    const payload = await res.json().catch(() => null);
 
-  if (!res.ok) {
+    if (res.status === 429 && payload?.error === "limit_reached") {
+      publishUsage(payload.usage);
+      throw new UsageLimitError(payload.limitType ?? "demo", payload.usage ?? null);
+    }
+
     throw new Error(payload?.error || `Generation failed (${res.status}).`);
   }
 
-  publishUsage(payload.usage);
+  if (!res.body) {
+    throw new Error("Generation failed: no response body.");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let payload: { result?: T; usage?: UsageInfo | null; error?: string } | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    let split: number;
+    while ((split = buffer.indexOf("\n\n")) !== -1) {
+      const frame = buffer.slice(0, split);
+      buffer = buffer.slice(split + 2);
+
+      if (frame.startsWith(":")) continue;
+
+      const line = frame.split("\n").find((l) => l.startsWith("data:"));
+      if (line) {
+        try {
+          payload = JSON.parse(line.slice(5).trim());
+        } catch {
+          throw new Error("Generation failed: malformed response.");
+        }
+      }
+    }
+  }
+
+  if (!payload) {
+    throw new Error("The connection closed before generation finished.");
+  }
+  if (payload.error) {
+    throw new Error(payload.error);
+  }
+
+  publishUsage(payload.usage ?? null);
   return payload.result as T;
 }
 
