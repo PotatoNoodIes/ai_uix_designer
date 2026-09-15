@@ -1,4 +1,4 @@
-import React from "react";
+import { Spinner, Micro } from "@/components/primitives";
 import { ZoomControls } from "@/components/canvas/ZoomControls";
 import { AddScreenPanel } from "@/components/canvas/AddScreenPanel";
 
@@ -58,14 +58,11 @@ export function OverlayLayer({
       />
 
       {isGenerating && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-50 pointer-events-none">
-          <div className="uix-spinner" />
-          <p
-            className="font-display font-700 text-base"
-            style={{ color: "var(--text-primary)", letterSpacing: "0.06em", textTransform: "uppercase" }}
-          >
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-overlay pointer-events-none">
+          <Spinner label="Synthesizing screens" />
+          <Micro as="p" className="text-ink">
             Synthesizing…
-          </p>
+          </Micro>
         </div>
       )}
     </>

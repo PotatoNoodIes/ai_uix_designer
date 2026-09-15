@@ -1,0 +1,122 @@
+/**
+ * Base element styles and third-party overrides, lifted out of index.html.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: var(--text-body);
+  margin: 0;
+  padding: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Graph paper. */
+  background-image: linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  background-position: -1px -1px;
+}
+
+/* Keyboard focus. The original design had none — hover was the only
+   affordance, which left keyboard users with no indication at all. */
+:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--canvas);
+  border-left: 1px solid var(--hairline);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--subtle);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink);
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 0;
+}
+
+/* React Flow -------------------------------------------------------------- */
+.react-flow__pane {
+  cursor: crosshair !important;
+}
+.react-flow__pane.dragging {
+  cursor: grabbing !important;
+}
+.react-flow__handle {
+  display: none !important;
+}
+.react-flow__node {
+  border-radius: 0 !important;
+}
+.react-flow__node.selected {
+  border: none !important;
+}
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* Markdown ---------------------------------------------------------------- */
+.markdown-content {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  font-family: "Bricolage Grotesque", Inter, sans-serif;
+  text-transform: uppercase;
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+.markdown-content p {
+  margin-bottom: var(--space-2);
+}
+.markdown-content code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 2px 4px;
+  font-size: var(--text-micro);
+  color: var(--ink);
+}
+.markdown-content pre {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+}
+.markdown-content pre code {
+  border: none;
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .brutal-btn:hover,
+  .brutal-btn:active {
+    transform: none;
+  }
+}

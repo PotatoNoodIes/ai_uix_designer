@@ -1,0 +1,15 @@
+/**
+ * Stylesheet entry. Order matters: tokens first so every layer can read them,
+ * then Tailwind's layers with our own base/component rules slotted into the
+ * matching layer.
+ */
+@import "reactflow/dist/style.css";
+@import "./tokens.css";
+
+@import "tailwindcss/base";
+@import "./base.css";
+
+@import "tailwindcss/components";
+@import "./components.css";
+
+@import "tailwindcss/utilities";

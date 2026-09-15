@@ -1,0 +1,165 @@
+/**
+ * Component classes. These stay in CSS rather than becoming long utility
+ * strings because they encode the interaction physics of the design — the
+ * button's hover displacement in particular reads badly as a class soup.
+ *
+ * Components consume these through the primitives in
+ * src/components/primitives/, not by writing the class names directly.
+ */
+@layer components {
+  .brutal-display {
+    font-family: "Bricolage Grotesque", Inter, sans-serif;
+    font-size: var(--text-display);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .brutal-micro {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: var(--text-micro);
+    color: var(--subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .brutal-panel {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-hard);
+    border-radius: var(--radius);
+  }
+
+  /* Panels sitting directly on the canvas, where the surface fill would
+     obscure the grid. Previously every call site overrode .brutal-panel's
+     background inline to achieve this. */
+  .brutal-panel-flush {
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-hard);
+    border-radius: var(--radius);
+  }
+
+  .brutal-btn {
+    background: var(--ink);
+    color: var(--canvas);
+    border: 1px solid var(--ink);
+    font-family: "Bricolage Grotesque", Inter, sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    box-shadow: var(--shadow-hard-sm);
+    transition: transform var(--fast), box-shadow var(--fast), background var(--fast);
+  }
+  .brutal-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow-acid);
+    background: var(--acid);
+    border-color: var(--acid);
+    color: var(--canvas);
+  }
+  .brutal-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 transparent;
+  }
+  .brutal-btn:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    box-shadow: none;
+  }
+
+  .brutal-ghost {
+    background: transparent;
+    color: var(--subtle);
+    border: 1px solid transparent;
+    padding: var(--space-1) var(--space-2);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: var(--text-micro);
+    cursor: pointer;
+    transition: background var(--fast), color var(--fast);
+  }
+  .brutal-ghost:hover {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+  .brutal-ghost:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .brutal-ghost[aria-pressed="true"],
+  .brutal-ghost[data-active="true"] {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  .brutal-input {
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    color: var(--ink);
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: var(--text-body);
+    padding: var(--space-3);
+    outline: none;
+    resize: none;
+    transition: border-color var(--fast);
+    border-radius: var(--radius);
+    width: 100%;
+  }
+  .brutal-input:focus {
+    border-color: var(--acid);
+  }
+  .brutal-input::placeholder {
+    color: var(--subtle);
+  }
+
+  .brutal-bubble-user {
+    border: 1px solid var(--acid);
+    background: rgba(212, 255, 0, 0.05);
+    color: var(--ink);
+    padding: var(--space-3);
+  }
+  .brutal-bubble-ai {
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    color: var(--ink);
+    padding: var(--space-3);
+    box-shadow: var(--shadow-hard-sm);
+  }
+
+  .modal-backdrop {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: grayscale(100%);
+  }
+
+  .brutal-node-selected {
+    border-color: var(--acid);
+    box-shadow: var(--shadow-acid);
+  }
+
+  .screen-frame-mobile,
+  .screen-frame-tablet,
+  .screen-frame-desktop {
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-hard);
+    background: var(--canvas);
+  }
+
+  /* The loading indicator. The old markup asked for a class that was
+     deleted with the previous stylesheet, so every loading state rendered
+     as an empty black screen. */
+  .brutal-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--hairline);
+    border-top-color: var(--acid);
+    animation: brutal-spin 700ms linear infinite;
+  }
+  @keyframes brutal-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}

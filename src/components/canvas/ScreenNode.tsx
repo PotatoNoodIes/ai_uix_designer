@@ -4,6 +4,14 @@ import { getFullHtml } from "@/utils/htmlUtils";
 import { BREAKPOINT_WIDTHS, BREAKPOINT_HEIGHTS } from "@/constants/appConstants";
 import { triggerDownload } from "@/utils/download";
 import type { ScreenNodeData } from "@/types";
+import { Panel, Button, IconButton, CloseIcon, Micro, Textarea } from "@/components/primitives";
+import { cn } from "@/utils/cn";
+
+const FRAME_CLASS = {
+  mobile: "screen-frame-mobile",
+  tablet: "screen-frame-tablet",
+  desktop: "screen-frame-desktop",
+} as const;
 
 export const ScreenNode = ({ data, selected }: NodeProps<ScreenNodeData>) => {
   const width = BREAKPOINT_WIDTHS[data.currentBreakpoint];
@@ -18,101 +26,142 @@ export const ScreenNode = ({ data, selected }: NodeProps<ScreenNodeData>) => {
 
   return (
     <div
-      className={`flex flex-col gap-6 transition-all duration-300 ${
-        selected ? "scale-[1.02] z-[1000]" : "opacity-100 z-10"
-      } ${data.justCreated ? "ring-8 ring-indigo-500/30 animate-pulse" : ""}
-  ${selected ? "scale-[1.02]" : ""}`}
+      className={cn(
+        "flex flex-col gap-6 transition-transform duration-300",
+        selected ? "scale-[1.02] z-overlay" : "z-canvas",
+        data.justCreated && "animate-pulse"
+      )}
     >
-      <NodeToolbar isVisible={selected} position={Position.Top} offset={15} className="z-[2000]">
-        <div className="uix-node-toolbar flex flex-col gap-3 p-4 w-[320px] animate-in fade-in slide-in-from-bottom-2">
-          <div className="flex items-center justify-between px-1">
+      <NodeToolbar isVisible={selected} position={Position.Top} offset={15} className="z-panel">
+        <Panel
+          variant="flush"
+          className="flex flex-col gap-3 p-4 w-[320px] animate-in fade-in slide-in-from-bottom-2"
+        >
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div style={{width:6,height:6,borderRadius:'50%',background:'var(--brand)'}} />
-              <span className="uix-label">Contextual Refinement</span>
+              <span className="w-1.5 h-1.5 bg-acid" aria-hidden="true" />
+              <Micro>Refine screen</Micro>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); data.onDeselect(); }} className="uix-icon-btn">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <IconButton
+              label="Close refinement panel"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onDeselect();
+              }}
+            >
+              <CloseIcon size={12} />
+            </IconButton>
           </div>
 
           <div className="flex gap-2 items-stretch">
-            <textarea
+            <Textarea
               value={data.modifyInput}
               onChange={(e) => data.onModifyInputChange(e.target.value)}
-              placeholder="e.g. 'Add a line chart for heart rate'"
-              className="uix-textarea flex-1 p-3 text-xs h-16 resize-none"
+              placeholder="e.g. add a line chart for heart rate"
+              className="h-16"
+              aria-label={`Describe a change to ${data.name}`}
             />
-            <button
-              onClick={(e) => { e.stopPropagation(); data.onHandleModify(); }}
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onHandleModify();
+              }}
               disabled={data.isModifying || !data.modifyInput.trim() || data.isAiBusy}
-              className="uix-btn-send flex items-center justify-center px-4 shrink-0" style={{borderRadius:'var(--r-sm)'}}
+              className="px-4 shrink-0 self-stretch text-micro"
             >
-              <span className="font-display font-700 text-[10px] uppercase">{data.isModifying ? "..." : "Apply"}</span>
-            </button>
+              {data.isModifying ? "…" : "Apply"}
+            </Button>
           </div>
 
-          <div className="flex items-center justify-between pt-2" style={{borderTop:'1px solid var(--panel-border)'}}>
+          <div className="flex items-center justify-between pt-2 border-t border-hairline">
             <div className="flex gap-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); data.onToggleLive(data.id); }}
-                className={`px-2.5 py-1 text-[8px] font-display font-700 uppercase tracking-widest rounded flex items-center gap-1.5 transition-all border ${
-                  data.isLive ? "bg-brand-600 border-transparent text-white" : "border-transparent text-slate-500"
-                }`}
-                style={data.isLive ? {background:'var(--brand)',borderColor:'var(--brand)'} : {background:'rgba(255,255,255,0.04)',borderColor:'var(--panel-border)'}}
+              <Button
+                variant="ghost"
+                active={data.isLive}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  data.onToggleLive(data.id);
+                }}
+                aria-pressed={data.isLive}
+                className="flex items-center gap-1.5"
               >
-                <div className={`w-1.5 h-1.5 rounded-full ${data.isLive ? "bg-green-400 animate-pulse" : "bg-slate-500"}`} />
+                <span
+                  className={cn("w-1.5 h-1.5", data.isLive ? "bg-acid" : "bg-subtle")}
+                  aria-hidden="true"
+                />
                 {data.isLive ? "Live" : "Static"}
-              </button>
-              <button onClick={handleExportSingle} className="px-2.5 py-1 text-[8px] font-display font-700 uppercase tracking-widest rounded flex items-center gap-1.5 uix-btn-ghost">
-                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleExportSingle}
+                className="flex items-center gap-1.5"
+              >
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="square" strokeWidth={2} d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4" />
+                </svg>
                 Export
-              </button>
+              </Button>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); data.onDelete(data.id); }} className="uix-icon-btn" style={{color:'var(--text-muted)'}} title="Delete Screen">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </button>
+            <IconButton
+              label={`Delete ${data.name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onDelete(data.id);
+              }}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="square" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+              </svg>
+            </IconButton>
           </div>
-        </div>
+        </Panel>
       </NodeToolbar>
 
-      <div className={`uix-node-header flex items-start justify-between px-5 py-4 mb-3 group/header shadow-lg ${data.locked ? "opacity-70" : ""}`}>
-        <div className="flex flex-col gap-1 pointer-events-none">
-          <span className="font-display font-800 text-[18px] leading-none tracking-tight" style={{color:'var(--text-primary)'}}>{data.name}</span>
-          <span className="uix-micro truncate max-w-[280px]" style={{opacity:0.6}}>{data.purpose}</span>
+      <div
+        className={cn(
+          "flex items-start justify-between gap-4 px-5 py-4 mb-3 border bg-sunken",
+          selected ? "border-acid" : "border-hairline",
+          data.locked && "opacity-70"
+        )}
+      >
+        <div className="flex flex-col gap-1 pointer-events-none min-w-0">
+          <span className="font-display font-extrabold text-lead leading-none tracking-tight text-ink truncate">
+            {data.name}
+          </span>
+          <Micro className="truncate max-w-[280px]">{data.purpose}</Micro>
         </div>
-        <div className={`uix-icon-btn transition-all mt-0.5 ${selected ? "" : "opacity-0 group-hover/header:opacity-100"}`} style={selected ? {background:'var(--brand)',color:'#fff',borderColor:'transparent'} : {}}>
+        <span
+          className={cn(
+            "mt-0.5 shrink-0 transition-colors duration-fast",
+            selected ? "text-acid" : "text-subtle"
+          )}
+          aria-hidden="true"
+        >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
+            <path strokeLinecap="square" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
-        </div>
+        </span>
       </div>
 
       <div
-        className={`relative transition-all duration-500 ease-in-out ${
-          data.currentBreakpoint === "mobile" ? "screen-frame-mobile" :
-          data.currentBreakpoint === "tablet" ? "screen-frame-tablet" : "screen-frame-desktop"
-        } ${
-          selected
-            ? data.currentBreakpoint === "mobile" ? "screen-frame-selected-mobile" :
-              data.currentBreakpoint === "tablet" ? "screen-frame-selected-tablet" : "screen-frame-selected-desktop"
-            : ""
-        }`}
+        className={cn(
+          "relative overflow-hidden transition-all duration-500 ease-in-out bg-canvas",
+          FRAME_CLASS[data.currentBreakpoint],
+          // .brutal-node-selected was defined in the stylesheet but never
+          // applied; selection previously used a colour token that no longer
+          // resolved, so selecting a screen had no visible effect at all.
+          selected && "brutal-node-selected"
+        )}
         style={{
           width: `${width}px`,
           height: `${height}px`,
           minHeight: `${height}px`,
-          borderStyle: 'solid',
-          borderColor: selected ? 'var(--brand)' : 'rgba(255,255,255,0.08)',
-          background: '#0c101a',
-          overflow: 'hidden',
         }}
       >
         <iframe
           srcDoc={getFullHtml(data.markup, data.designSystem)}
-          className={`w-full border-none pointer-events-none ${data.isLive ? "pointer-events-auto" : ""}`}
-          style={{ width: `${width}px`, height: `${height}px`, display: 'block' }}
+          className={cn("w-full border-none", data.isLive ? "pointer-events-auto" : "pointer-events-none")}
+          style={{ width: `${width}px`, height: `${height}px`, display: "block" }}
           title={data.name}
           sandbox="allow-scripts allow-same-origin"
         />

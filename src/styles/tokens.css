@@ -1,0 +1,65 @@
+/**
+ * Design tokens. Previously the :root block inside index.html's 253-line
+ * <style> tag, extended with the scales that were missing — spacing, a fuller
+ * type ramp, and named z-index steps to replace magic numbers.
+ *
+ * These mirror tailwind.config.ts. Tokens are for hand-written CSS and inline
+ * styles; utilities are the preferred way to reach them from components.
+ */
+:root {
+  /* Surfaces, darkest to lightest */
+  --canvas: #000000;
+  --sunken: #050505;
+  --surface: #111111;
+  --hairline: #222222;
+
+  /* Foreground */
+  --ink: #ffffff;
+  --subtle: #666666;
+  --acid: #d4ff00;
+
+  /* Back-compat aliases for the original token names. */
+  --bg: var(--canvas);
+  --border: var(--hairline);
+  --fg: var(--ink);
+  --muted: var(--subtle);
+  --lime: var(--acid);
+
+  /* Type */
+  --text-micro: 10px;
+  --text-body: 13px;
+  --text-lead: 16px;
+  --text-title: 24px;
+  --text-display: 40px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Depth — offset, never blurred: the shadows read as displacement. */
+  --shadow-hard: 4px 4px 0 rgba(255, 255, 255, 0.1);
+  --shadow-acid: 4px 4px 0 var(--acid);
+  --shadow-hard-sm: 2px 2px 0 var(--hairline);
+  --shadow-hard-lg: 8px 8px 0 var(--hairline);
+  --shadow-lime: var(--shadow-acid);
+
+  --radius: 0px;
+  --fast: 100ms linear;
+
+  /* Stacking order, named so the relationships are legible. */
+  --z-canvas: 10;
+  --z-overlay: 1000;
+  --z-panel: 2000;
+  --z-modal: 3000;
+  --z-nav: 4000;
+  --z-sidebar: 5000;
+  --z-tabbar: 5001;
+
+  /* The canvas grid. One scale, shared by the body backdrop and React Flow,
+     which previously drew a 24px blue grid over a 40px grey one. */
+  --grid-size: 40px;
+}

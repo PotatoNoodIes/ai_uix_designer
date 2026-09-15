@@ -29,9 +29,11 @@ export class UsageLimitError extends Error {
 let latestUsage: UsageInfo | null = null;
 const usageListeners = new Set<(u: UsageInfo | null) => void>();
 
-export function onUsageChange(fn: (u: UsageInfo | null) => void) {
+export function onUsageChange(fn: (u: UsageInfo | null) => void): () => void {
   usageListeners.add(fn);
-  return () => usageListeners.delete(fn);
+  return () => {
+    usageListeners.delete(fn);
+  };
 }
 
 function publishUsage(usage: UsageInfo | null) {

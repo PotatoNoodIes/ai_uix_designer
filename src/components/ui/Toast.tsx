@@ -1,25 +1,36 @@
-import React from "react";
 import type { Notification } from "@/types";
+import { cn } from "@/utils/cn";
 
 interface ToastProps {
   notification: Notification;
 }
 
 export function Toast({ notification }: ToastProps) {
+  const isError = notification.type === "error";
+
   return (
-    <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[3000] animate-in fade-in slide-in-from-top-4 uix-toast ${
-      notification.type === "error" ? "uix-toast-error toast-error" : "uix-toast-success"
-    }`}>
-      {notification.type === "error" ? (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    <div
+      role="status"
+      aria-live={isError ? "assertive" : "polite"}
+      className={cn(
+        "fixed top-6 left-1/2 -translate-x-1/2 z-modal",
+        "flex items-center gap-3 px-4 py-3 max-w-[90vw]",
+        "border bg-sunken font-mono text-micro uppercase tracking-wider",
+        "animate-in fade-in slide-in-from-top-4",
+        isError ? "border-ink text-ink" : "border-acid text-acid"
+      )}
+      style={{ boxShadow: isError ? "4px 4px 0 var(--hairline)" : "4px 4px 0 var(--acid)" }}
+    >
+      {isError ? (
+        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="square" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
         </svg>
       ) : (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="square" strokeWidth={2.5} d="m5 13 4 4L19 7" />
         </svg>
       )}
-      {notification.message}
+      <span className="min-w-0">{notification.message}</span>
     </div>
   );
 }

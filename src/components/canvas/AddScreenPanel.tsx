@@ -1,5 +1,5 @@
-import React from "react";
-import { Panel } from "reactflow";
+import { Panel as FlowPanel } from "reactflow";
+import { Panel, Button, IconButton, CloseIcon, Micro, Textarea } from "@/components/primitives";
 
 interface AddScreenPanelProps {
   newScreenPrompt: string;
@@ -17,31 +17,38 @@ export function AddScreenPanel({
   onGenerate,
 }: AddScreenPanelProps) {
   return (
-    <Panel position="top-center" className="mt-4 md:mt-6 w-full px-4 md:px-0">
-      <div className="uix-add-panel p-4 md:p-6 w-full md:w-[400px] animate-in slide-in-from-top-4 duration-300" style={{boxShadow:'var(--shadow-panel)'}}>
-        <header className="flex items-center justify-between mb-4">
+    <FlowPanel position="top-center" className="mt-4 md:mt-6 w-full px-4 md:px-0">
+      <Panel
+        variant="flush"
+        className="p-4 md:p-6 w-full md:w-[400px] flex flex-col gap-4 animate-in slide-in-from-top-4"
+      >
+        <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div style={{width:6,height:6,borderRadius:'50%',background:'var(--brand)'}} />
-            <span className="uix-label">New Screen</span>
+            <span className="w-1.5 h-1.5 bg-acid" aria-hidden="true" />
+            <Micro>New screen</Micro>
           </div>
-          <button onClick={onClose} className="uix-icon-btn">✕</button>
+          <IconButton label="Cancel" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
         </header>
-        <textarea
+
+        <Textarea
           autoFocus
           value={newScreenPrompt}
           onChange={(e) => setNewScreenPrompt(e.target.value)}
-          placeholder="e.g. 'A premium statistics page with line charts'"
-          className="uix-textarea w-full h-24 p-3 mb-4 text-xs"
+          placeholder="e.g. a statistics page with line charts"
+          className="h-24"
+          aria-label="Describe the new screen"
         />
-        <button
+
+        <Button
           onClick={onGenerate}
           disabled={isGeneratingNewScreen || !newScreenPrompt.trim()}
-          className="uix-btn-send w-full py-3 text-xs font-display font-bold uppercase tracking-wide disabled:opacity-50"
-          style={{borderRadius:'var(--r-sm)'}}
+          className="w-full py-3"
         >
-          {isGeneratingNewScreen ? "Synthesizing..." : "Generate New Screen"}
-        </button>
-      </div>
-    </Panel>
+          {isGeneratingNewScreen ? "Synthesizing…" : "Generate screen"}
+        </Button>
+      </Panel>
+    </FlowPanel>
   );
 }

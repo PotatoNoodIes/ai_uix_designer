@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { AppStateProvider } from "@/context/AppStateContext";
 import { Canvas } from "@/components/canvas/Canvas";
 import { GateScreen } from "@/components/ui/GateScreen";
+import { Spinner } from "@/components/primitives";
 
 export default function App() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -11,8 +12,8 @@ export default function App() {
 
   if (!isLoaded) {
     return (
-      <div className="h-screen w-full flex items-center justify-center" style={{ background: "var(--canvas-bg)" }}>
-        <div className="uix-spinner" />
+      <div className="h-screen w-full flex items-center justify-center bg-canvas">
+        <Spinner label="Loading UIX Agent" />
       </div>
     );
   }
