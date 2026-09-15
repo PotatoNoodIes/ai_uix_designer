@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 
-config();
+config({ override: true, quiet: true });
 
 const REQUIRED = [
   "GEMINI_API_KEY",
