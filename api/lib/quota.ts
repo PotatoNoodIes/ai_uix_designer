@@ -6,10 +6,28 @@ export const FREE_LIMIT = 5;
 const DEMO_TTL_SECONDS = 60 * 60 * 24 * 5;
 const USER_TTL_SECONDS = 60 * 60 * 24 * 30;
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+let client: Redis | null = null;
+
+function redis(): Redis {
+  if (!client) {
+    const url = process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!url || !token) {
+      throw new Error("Upstash credentials are not configured on this server.");
+    }
+    client = new Redis({ url, token });
+  }
+  return client;
+}
+
+export async function redisOk(): Promise<boolean> {
+  try {
+    await redis().get("healthcheck");
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex");
@@ -46,7 +64,7 @@ export type QuotaState = {
 
 export async function peekQuota(identity: QuotaIdentity): Promise<QuotaState> {
   const limit = limitFor(identity);
-  const raw = await redis.get<number>(keyFor(identity));
+  const raw = await redis().get<number>(keyFor(identity));
   const used = typeof raw === "number" ? raw : 0;
   return {
     used,
@@ -60,9 +78,9 @@ export async function consumeQuota(identity: QuotaIdentity): Promise<QuotaState>
   const limit = limitFor(identity);
   const key = keyFor(identity);
 
-  const count = await redis.incr(key);
+  const count = await redis().incr(key);
   if (count === 1) {
-    await redis.expire(
+    await redis().expire(
       key,
       identity.kind === "user" ? USER_TTL_SECONDS : DEMO_TTL_SECONDS
     );
@@ -78,7 +96,7 @@ export async function consumeQuota(identity: QuotaIdentity): Promise<QuotaState>
 
 export async function refundQuota(identity: QuotaIdentity): Promise<void> {
   try {
-    await redis.decr(keyFor(identity));
+    await redis().decr(keyFor(identity));
   } catch (err) {
     console.error("[quota] refund failed:", err);
   }

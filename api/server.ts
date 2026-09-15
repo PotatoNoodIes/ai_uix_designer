@@ -1,4 +1,8 @@
+import "./env.ts";
+import { reportEnv } from "./env.ts";
 import { handleRequest } from "./app.ts";
+
+reportEnv();
 
 const PORT = Number(process.env.PORT ?? 3001);
 
