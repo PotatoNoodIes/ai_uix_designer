@@ -2,14 +2,9 @@ import React from "react";
 import { cn } from "@/utils/cn";
 
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Required: these buttons have no visible text. */
   label: string;
 }
 
-/**
- * Icon-only button. The label is mandatory because the previous markup relied
- * on `title` alone, leaving every icon control unnamed for screen readers.
- */
 export function IconButton({ label, className, type = "button", ...props }: IconButtonProps) {
   return (
     <button
@@ -25,7 +20,6 @@ export function IconButton({ label, className, type = "button", ...props }: Icon
   );
 }
 
-/** The close glyph, previously re-inlined as raw SVG in four places. */
 export function CloseIcon({ size = 14 }: { size?: number }) {
   return (
     <svg

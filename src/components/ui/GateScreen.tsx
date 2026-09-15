@@ -23,7 +23,6 @@ async function checkDemoAccess(): Promise<{ allowed: boolean }> {
     if (!res.ok) throw new Error("non-2xx");
     return await res.json();
   } catch {
-    // The gate only unlocks the UI; /generate enforces the real limit.
     return { allowed: true };
   }
 }

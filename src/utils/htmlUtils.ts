@@ -23,13 +23,13 @@ export const getFullHtml = (markup: string, design: any): string => {
       --border: ${design.colors.border || design.colors.surface};
       --radius: ${design.radius || "1rem"};
     }
-    body { 
-      background: var(--background); 
-      color: var(--foreground); 
-      font-family: '${design.font}', sans-serif; 
-      margin: 0; 
-      padding: 0; 
-      min-height: 100vh; 
+    body {
+      background: var(--background);
+      color: var(--foreground);
+      font-family: '${design.font}', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
       width: 100%;
     }
     #root { width: 100%; min-height: 100vh; }

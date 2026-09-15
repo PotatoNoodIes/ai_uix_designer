@@ -1,7 +1,3 @@
-/**
- * Server-side Gemini client. The API key is read from the process environment
- * and never leaves this module.
- */
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.GEMINI_API_KEY;

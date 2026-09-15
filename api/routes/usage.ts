@@ -1,7 +1,3 @@
-/**
- * GET /usage — current quota for the caller, so the UI can render counters
- * without trusting (or writing) a client-side tally.
- */
 import { getUserId } from "../lib/clerk.ts";
 import { peekQuota, getClientIp, type QuotaIdentity } from "../lib/quota.ts";
 

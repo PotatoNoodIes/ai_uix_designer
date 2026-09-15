@@ -7,11 +7,11 @@ interface ModalProps {
   open?: boolean;
   onClose: () => void;
   title: string;
-  /** Hides the visible heading while keeping it available to screen readers. */
+
   hideTitle?: boolean;
   children: React.ReactNode;
   className?: string;
-  /** Accent the panel's drop shadow, e.g. for the upgrade prompt. */
+
   emphasis?: boolean;
   showClose?: boolean;
 }
@@ -19,13 +19,6 @@ interface ModalProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
-/**
- * The single modal shell. Four near-identical hand-rolled versions existed
- * before, two of them styled with classes that no longer had definitions.
- *
- * Adds what none of them had: a labelled dialog role, Escape to close, a focus
- * trap, and focus restored to whatever was focused before opening.
- */
 export function Modal({
   open = true,
   onClose,

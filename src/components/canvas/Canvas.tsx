@@ -166,10 +166,6 @@ export function Canvas() {
         flex-1 relative z-0
         ${mobilePanel === "canvas" ? "flex flex-col" : "hidden md:block"}
       `}>
-        {/* Intentionally transparent: the body's graph-paper backdrop shows
-            through here. The old background token was undefined, which
-            happened to produce the same result by accident. */}
-
         <CanvasNav
           currentProject={currentProject}
           currentBreakpoint={currentBreakpoint}

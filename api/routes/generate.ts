@@ -1,10 +1,3 @@
-/**
- * POST /generate — the only path that spends our Gemini key.
- *
- * Accepts an *intent*, never a raw prompt or response schema: if callers could
- * supply their own systemInstruction this endpoint would be a free
- * general-purpose LLM running on our key.
- */
 import { callGemini, type GeminiPart } from "../lib/gemini.ts";
 import { getUserId } from "../lib/clerk.ts";
 import {
@@ -51,7 +44,6 @@ export async function handleGenerate(req: Request): Promise<Response> {
 
   const model = resolveServerModel(body.model);
 
-  // Build the prompt server-side from the intent.
   let systemInstruction: string;
   let userPrompt: string;
   let responseSchema: unknown;
@@ -118,7 +110,6 @@ export async function handleGenerate(req: Request): Promise<Response> {
       return badRequest("Unknown intent.");
   }
 
-  // Identify the caller, then meter before spending anything.
   const userId = await getUserId(req);
   const identity: QuotaIdentity = userId
     ? { kind: "user", userId }
@@ -131,7 +122,6 @@ export async function handleGenerate(req: Request): Promise<Response> {
     try {
       quota = await consumeQuota(identity);
     } catch (err) {
-      // Fail CLOSED: unlike the gate screen, this endpoint spends money.
       console.error("[generate] quota check failed:", err);
       return Response.json(
         { error: "Usage limits are unavailable right now. Try again shortly." },
@@ -171,7 +161,6 @@ export async function handleGenerate(req: Request): Promise<Response> {
         : null,
     });
   } catch (err) {
-    // Don't charge for our own failure.
     if (quota) await refundQuota(identity);
     console.error("[generate] generation failed:", err);
     return Response.json(

@@ -1,10 +1,3 @@
-/**
- * Minimal in-memory stand-in for the Upstash REST API, so quota behaviour can
- * be exercised end-to-end without a real Redis.
- *
- * Handles both single commands (["INCR","key"]) and the auto-pipelined batches
- * the client actually sends ([["INCR","k"],["EXPIRE","k","60"]]).
- */
 import { createServer } from "node:http";
 
 export function startFakeUpstash(port: number) {

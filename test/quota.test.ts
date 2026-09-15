@@ -1,7 +1,3 @@
-/**
- * Verifies the server-side quota actually blocks, and that the old client-side
- * counters can't influence it.
- */
 import { startFakeUpstash } from "./fake-upstash.ts";
 
 const REDIS_PORT = 3098;
@@ -41,15 +37,12 @@ function generate(ip: string, extra: Record<string, unknown> = {}) {
 
 console.log("\nAnonymous demo limit (2 generations per IP):");
 
-// Gemini is unconfigured, so a permitted call reaches generation and fails 502.
-// That is the signal that quota ALLOWED it through.
 const a1 = await generate("10.0.0.1");
 check("1st call passes quota (reaches generation)", a1.status === 502, `got ${a1.status}`);
 
 const a2 = await generate("10.0.0.1");
 check("2nd call passes quota", a2.status === 502, `got ${a2.status}`);
 
-// Failed generations are refunded, so burn the credits with a working stub.
 console.log("\nRefund on failure (a failed generation must not cost a credit):");
 const usageAfterFailures = await handleRequest(
   new Request(`http://localhost:${API_PORT}/usage`, {
@@ -60,7 +53,7 @@ const refunded = await usageAfterFailures.json();
 check("two failed generations cost 0 credits", refunded.used === 0, JSON.stringify(refunded));
 
 console.log("\nExhausting the limit with successful-looking calls:");
-// Drive the counter directly to simulate successful generations.
+
 const { consumeQuota, peekQuota } = await import("../api/lib/quota.ts");
 const id = { kind: "anon", ip: "10.0.0.2" } as const;
 const q1 = await consumeQuota(id);

@@ -1,14 +1,7 @@
-/**
- * Talks to our own API for the default (server-key) path.
- *
- * Nothing here knows a Gemini key: the server holds it, builds the prompts and
- * meters usage. See api/routes/generate.ts.
- */
 import type { GenerateRequest, UsageInfo } from "@api/shared/types";
 
 const API_BASE = "/uix/api";
 
-/** Set by AuthTokenProvider so plain functions can reach Clerk's getToken(). */
 let tokenGetter: (() => Promise<string | null>) | null = null;
 
 export function setAuthTokenGetter(fn: (() => Promise<string | null>) | null) {
@@ -25,7 +18,6 @@ export class UsageLimitError extends Error {
   }
 }
 
-/** Last usage figures the server reported, so the UI can render counters. */
 let latestUsage: UsageInfo | null = null;
 const usageListeners = new Set<(u: UsageInfo | null) => void>();
 
@@ -54,7 +46,6 @@ async function authHeaders(): Promise<Record<string, string>> {
     const token = await tokenGetter?.();
     if (token) headers.Authorization = `Bearer ${token}`;
   } catch {
-    // Not signed in, or Clerk unavailable — falls back to the demo limit.
   }
   return headers;
 }

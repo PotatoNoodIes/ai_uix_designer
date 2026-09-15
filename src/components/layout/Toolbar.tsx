@@ -49,8 +49,6 @@ export function Toolbar({
         <Button variant="ghost" onClick={onOpenSettings}>
           Settings
         </Button>
-        {/* A label wrapping a hidden input is the only way to style a file
-            picker, so it carries the button's role explicitly. */}
         <label className="brutal-ghost cursor-pointer" tabIndex={0}>
           Import
           <input

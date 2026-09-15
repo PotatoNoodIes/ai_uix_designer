@@ -2,7 +2,6 @@ import React, { useId } from "react";
 import { cn } from "@/utils/cn";
 import { Micro } from "./Micro";
 
-/** A labelled text input. The label is a real <label>, not a floating div. */
 export function Input({
   label,
   className,
@@ -43,7 +42,6 @@ export function Textarea({
   );
 }
 
-/** Segmented control — the two/three-way toggles used for provider and breakpoint. */
 export function Segmented<T extends string>({
   label,
   value,

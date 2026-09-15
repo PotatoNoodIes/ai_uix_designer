@@ -72,12 +72,10 @@ export function useCanvasState({
   const didInitialLayout = useRef(false);
   const isAiBusy = isGenerating || isGeneratingNewScreen || isModifying;
 
-
   useEffect(() => {
     const savedProjects = localStorage.getItem("stitch_v3_projects");
     if (savedProjects) setProjects(JSON.parse(savedProjects));
   }, []);
-
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -255,11 +253,6 @@ export function useCanvasState({
     [pushToHistory]
   );
 
-  /**
-   * The server is the authority on quota, so a 429 can arrive even when the
-   * local counter looked fine (another tab, another device, a stale cache).
-   * Route those to the same modals the pre-flight check uses.
-   */
   const handleAiError = (err: any, fallback: string) => {
     if (err instanceof UsageLimitError) {
       if (err.limitType === "free") setShowUpgrade(true);
@@ -562,16 +555,15 @@ export function useCanvasState({
   };
 
   return {
-    // ReactFlow
     nodes, edges, onNodesChange, onEdgesChange,
     zoomIn, zoomOut, fitView,
-    // Project state
+
     projects, setProjects,
     currentProject, setCurrentProject,
     messages, setMessages,
     referenceAssets,
     past, future,
-    // AI / generate state
+
     isGenerating, isAiBusy,
     input, setInput,
     modifyInput, setModifyInput,
@@ -579,10 +571,10 @@ export function useCanvasState({
     isAddingScreen, setIsAddingScreen,
     newScreenPrompt, setNewScreenPrompt,
     isGeneratingNewScreen,
-    // Canvas state
+
     currentBreakpoint, setCurrentBreakpoint,
     activeLiveScreens,
-    // Handlers
+
     undo, redo,
     handleSaveSnapshot,
     handleGenerate,

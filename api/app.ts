@@ -1,9 +1,3 @@
-/**
- * Runtime-agnostic request handler.
- *
- * Kept free of Bun/Node specifics so the same routing works under either
- * runtime and can be exercised directly in tests with a plain Request.
- */
 import { handleGenerate } from "./routes/generate.ts";
 import { handleDemoCheck } from "./routes/demo-check.ts";
 import { handleUsage } from "./routes/usage.ts";
@@ -18,7 +12,7 @@ const routes: Record<string, Handler> = {
 
 export async function handleRequest(req: Request): Promise<Response> {
   const { pathname } = new URL(req.url);
-  // Tolerate the proxy prefix surviving the rewrite.
+
   const path = pathname.replace(/^\/uix\/api/, "").replace(/^\/api/, "") || "/";
 
   if (path === "/health") {

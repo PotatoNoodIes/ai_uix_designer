@@ -34,8 +34,6 @@ export function SignInNudge({ onDismiss }: SignInNudgeProps) {
           </div>
         ) : (
           <div className="flex justify-center">
-            {/* Previously rendered with no appearance prop, so a default
-                light-mode Clerk card appeared inside this dark dialog. */}
             <SignIn
               routing="hash"
               afterSignInUrl={window.location.href}

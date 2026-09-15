@@ -1,14 +1,3 @@
-/**
- * AI entrypoints for the app.
- *
- * Two paths, deliberately:
- *  - No custom key  -> POST /uix/api/generate. The server holds OUR Gemini key,
- *                      builds the prompts and enforces quota. The browser never
- *                      sees a key.
- *  - Custom key     -> call the provider directly from the browser. It's the
- *                      user's own key, it costs us nothing, and it's the only
- *                      way the OpenRouter models work.
- */
 import { GoogleGenAI } from "@google/genai";
 import { requestGeneration } from "./aiClient";
 import {
@@ -34,10 +23,6 @@ export type { ChatMessage, ReferenceAsset, GeneratedUI };
 
 type Provider = "gemini" | "openrouter";
 
-/**
- * Direct provider call using the user's own key. Only ever reached when the
- * user has entered one in Settings.
- */
 async function callWithUserKey(
   systemInstruction: string,
   userPrompt: string,

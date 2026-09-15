@@ -10,7 +10,6 @@ export function useAISettings() {
   const [appTheme, setAppTheme] = useState<"light" | "dark">("dark");
   const [productTheme, setProductTheme] = useState<"light" | "dark">("light");
 
-
   useEffect(() => {
     const savedTheme = localStorage.getItem("stitch_app_theme");
     const savedProvider = localStorage.getItem("uix_provider");
@@ -22,11 +21,9 @@ export function useAISettings() {
     if (savedApiKey) setCustomApiKey(savedApiKey);
   }, []);
 
-
   useEffect(() => {
     localStorage.setItem("stitch_app_theme", appTheme);
   }, [appTheme]);
-
 
   const persistSettings = () => {
     localStorage.setItem("uix_provider", selectedProvider);

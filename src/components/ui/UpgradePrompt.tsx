@@ -39,8 +39,6 @@ export function UpgradePrompt({ onDismiss }: UpgradePromptProps) {
           <Button
             className="w-full"
             onClick={() => {
-              // No billing flow exists yet; this previously fired a bare
-              // window.alert().
               window.open("mailto:hello@example.com?subject=UIX Agent Pro", "_blank");
             }}
           >

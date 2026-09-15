@@ -19,14 +19,6 @@ export interface UsageLimitResult {
   isSignedIn: boolean;
 }
 
-/**
- * Display-only view of the quota. The server is the source of truth — it meters
- * every generation in api/routes/generate.ts and returns the new counts, which
- * arrive here through the aiClient usage subscription.
- *
- * Nothing in this hook can grant credit: editing these values in the browser
- * changes the label, not the limit.
- */
 export function useUsageLimit(): UsageLimitResult {
   const { isSignedIn, isLoaded } = useUser();
   const [usage, setUsage] = useState<UsageInfo | null>(() => getLatestUsage());
@@ -38,8 +30,6 @@ export function useUsageLimit(): UsageLimitResult {
     void fetchUsage();
   }, [isLoaded, isSignedIn]);
 
-  // incrementUsage is retained so callers don't change shape; the server has
-  // already counted the generation by the time this runs.
   const incrementUsage = useCallback(async () => {
     await fetchUsage();
   }, []);

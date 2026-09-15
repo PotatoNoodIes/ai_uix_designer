@@ -1,9 +1,3 @@
-/**
- * POST /demo-check — gate-screen check for anonymous visitors.
- *
- * Read-only: it reports remaining demo credits but does not consume one.
- * Generation is metered in /generate, which is where the key is actually spent.
- */
 import { peekQuota, getClientIp } from "../lib/quota.ts";
 
 export async function handleDemoCheck(req: Request): Promise<Response> {
@@ -23,8 +17,6 @@ export async function handleDemoCheck(req: Request): Promise<Response> {
       limit: quota.limit,
     });
   } catch (err) {
-    // Fails open by design: this only unlocks the demo UI. The real limit is
-    // enforced in /generate, which fails closed.
     console.error("[demo-check] Redis error:", err);
     return Response.json({ allowed: true, count: 0, error: "redis_unavailable" });
   }

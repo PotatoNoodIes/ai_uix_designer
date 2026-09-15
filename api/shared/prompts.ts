@@ -1,8 +1,3 @@
-/**
- * Prompt construction. Lives server-side so the /generate route never accepts a
- * caller-supplied systemInstruction — otherwise the proxy would be a general
- * purpose LLM running on our key.
- */
 import type { ChatMessage, ScreenSummary } from "./types.ts";
 
 export function formatChatHistory(history: ChatMessage[] | undefined): string {

@@ -1,16 +1,5 @@
 import { dark } from "@clerk/themes";
 
-/**
- * Shared Clerk theming.
- *
- * SignInNudge previously rendered <SignIn> with no appearance prop at all, so a
- * default light-mode Clerk card appeared inside a black brutalist dialog.
- * Both sign-in surfaces now use this.
- *
- * Clerk's appearance API resolves these at runtime and cannot read CSS custom
- * properties, so this is the one place literal hex values belong. Keep them in
- * step with src/styles/tokens.css.
- */
 export const clerkAppearance = {
   baseTheme: dark,
   variables: {

@@ -1,7 +1,3 @@
-/**
- * Redis-backed usage counters. This is the source of truth for quota —
- * the client's copy is display only.
- */
 import { Redis } from "@upstash/redis";
 import { createHash } from "crypto";
 
@@ -48,7 +44,6 @@ export type QuotaState = {
   isSignedIn: boolean;
 };
 
-/** Reads the current counter without incrementing. */
 export async function peekQuota(identity: QuotaIdentity): Promise<QuotaState> {
   const limit = limitFor(identity);
   const raw = await redis.get<number>(keyFor(identity));
@@ -61,11 +56,6 @@ export async function peekQuota(identity: QuotaIdentity): Promise<QuotaState> {
   };
 }
 
-/**
- * Atomically increments and reports whether this call is within quota.
- * Call this BEFORE generating so concurrent requests can't both slip through
- * on the same remaining credit.
- */
 export async function consumeQuota(identity: QuotaIdentity): Promise<QuotaState> {
   const limit = limitFor(identity);
   const key = keyFor(identity);
@@ -86,7 +76,6 @@ export async function consumeQuota(identity: QuotaIdentity): Promise<QuotaState>
   };
 }
 
-/** Gives a credit back when generation fails, so errors don't cost the user. */
 export async function refundQuota(identity: QuotaIdentity): Promise<void> {
   try {
     await redis.decr(keyFor(identity));

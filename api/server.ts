@@ -1,13 +1,3 @@
-/**
- * UIX Agent API (pm2 process: uix-api).
- *
- * Vite proxies /uix/api/* here in dev (see vite.config.ts); in production the
- * same path is proxied by the web server, so /uix/api/generate arrives as
- * /generate.
- *
- * Runs under Node or Bun — the routing lives in app.ts and only the listener
- * differs, so the deployment isn't tied to having Bun on the box.
- */
 import { handleRequest } from "./app.ts";
 
 const PORT = Number(process.env.PORT ?? 3001);

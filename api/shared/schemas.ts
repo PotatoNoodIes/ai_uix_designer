@@ -1,4 +1,3 @@
-/** Gemini responseSchema definitions, moved off the client with the prompts. */
 import { Type } from "@google/genai";
 
 export const PRODUCT_SCHEMA = {

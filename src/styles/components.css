@@ -1,11 +1,3 @@
-/**
- * Component classes. These stay in CSS rather than becoming long utility
- * strings because they encode the interaction physics of the design — the
- * button's hover displacement in particular reads badly as a class soup.
- *
- * Components consume these through the primitives in
- * src/components/primitives/, not by writing the class names directly.
- */
 @layer components {
   .brutal-display {
     font-family: "Bricolage Grotesque", Inter, sans-serif;
@@ -31,9 +23,6 @@
     border-radius: var(--radius);
   }
 
-  /* Panels sitting directly on the canvas, where the surface fill would
-     obscure the grid. Previously every call site overrode .brutal-panel's
-     background inline to achieve this. */
   .brutal-panel-flush {
     background: var(--canvas);
     border: 1px solid var(--hairline);
@@ -147,9 +136,6 @@
     background: var(--canvas);
   }
 
-  /* The loading indicator. The old markup asked for a class that was
-     deleted with the previous stylesheet, so every loading state rendered
-     as an empty black screen. */
   .brutal-spinner {
     width: 24px;
     height: 24px;

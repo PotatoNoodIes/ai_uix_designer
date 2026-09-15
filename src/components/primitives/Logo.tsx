@@ -1,9 +1,5 @@
 import { cn } from "@/utils/cn";
 
-/**
- * The UIX lockup. Was duplicated verbatim in GateScreen, Canvas and
- * MobileTabBar, with the stroke weight drifting between copies.
- */
 export function Logo({
   className,
   size = "md",

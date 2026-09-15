@@ -1,14 +1,5 @@
 import type { Config } from "tailwindcss";
 
-/**
- * The design system, previously an inline `tailwind.config` object in
- * index.html alongside a CDN build.
- *
- * Note the namespacing: the old config set `colors: { lime, border, muted }`,
- * which REPLACED Tailwind's own lime-50…950 scale and shadowed the default
- * border/muted colours. `bg-lime` worked but `lime-400` silently did nothing.
- * These live under their own names instead, leaving the defaults intact.
- */
 export default {
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
@@ -20,8 +11,6 @@ export default {
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       colors: {
-        // Named after their role in the interface, not their hue, so a palette
-        // change doesn't leave every class lying about its colour.
         canvas: "#000000",
         sunken: "#050505",
         surface: "#111111",
@@ -38,8 +27,6 @@ export default {
         display: ["40px", { lineHeight: "0.95", letterSpacing: "-0.04em" }],
       },
       borderRadius: {
-        // The brutalist direction is square by design; this keeps that explicit
-        // rather than leaving stray rounded-* classes to contradict it.
         none: "0px",
       },
       boxShadow: {
@@ -52,7 +39,6 @@ export default {
         fast: "100ms",
       },
       zIndex: {
-        // Replaces the magic z-[5001]/[5000]/[4000]/[3000]/[2000]/[1000] values.
         canvas: "10",
         overlay: "1000",
         panel: "2000",

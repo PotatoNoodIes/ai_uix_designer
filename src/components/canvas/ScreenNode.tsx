@@ -147,9 +147,7 @@ export const ScreenNode = ({ data, selected }: NodeProps<ScreenNodeData>) => {
         className={cn(
           "relative overflow-hidden transition-all duration-500 ease-in-out bg-canvas",
           FRAME_CLASS[data.currentBreakpoint],
-          // .brutal-node-selected was defined in the stylesheet but never
-          // applied; selection previously used a colour token that no longer
-          // resolved, so selecting a screen had no visible effect at all.
+
           selected && "brutal-node-selected"
         )}
         style={{

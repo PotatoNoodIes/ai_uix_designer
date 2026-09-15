@@ -1,7 +1,3 @@
-/**
- * Base element styles and third-party overrides, lifted out of index.html.
- */
-
 *,
 *::before,
 *::after {
@@ -18,15 +14,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Graph paper. */
   background-image: linear-gradient(var(--hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
   background-position: -1px -1px;
 }
 
-/* Keyboard focus. The original design had none — hover was the only
-   affordance, which left keyboard users with no indication at all. */
 :focus-visible {
   outline: 2px solid var(--acid);
   outline-offset: 2px;
@@ -50,7 +43,6 @@ body {
   width: 0;
 }
 
-/* React Flow -------------------------------------------------------------- */
 .react-flow__pane {
   cursor: crosshair !important;
 }
@@ -70,7 +62,6 @@ body {
   display: none !important;
 }
 
-/* Markdown ---------------------------------------------------------------- */
 .markdown-content {
   font-family: "Inter", system-ui, sans-serif;
   font-size: var(--text-body);

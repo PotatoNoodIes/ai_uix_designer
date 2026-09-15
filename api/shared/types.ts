@@ -1,9 +1,3 @@
-/**
- * Types shared between the browser client and the Bun API server.
- * Lives under api/ because the deploy workflow ships api/* to the server,
- * while Vite bundles it into the client via the @api alias.
- */
-
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
@@ -59,7 +53,6 @@ export type GeneratedUI = {
 
 export type ScreenResult = { name: string; markup: string; summary: string };
 
-/** Discriminated union of everything the /generate route accepts. */
 export type GenerateRequest =
   | {
       intent: "product";
@@ -91,7 +84,6 @@ export type GenerateRequest =
       model?: string;
     };
 
-/** Usage counters returned alongside every generation so the UI can render quota. */
 export type UsageInfo = {
   used: number;
   limit: number;
