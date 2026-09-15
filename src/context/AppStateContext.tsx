@@ -4,25 +4,16 @@ import { useAISettings } from "@/hooks/useAISettings";
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useUsageLimit } from "@/hooks/useUsageLimit";
 
-// ── Stable interface type ─────────────────────────────────────────────────────
-// This is the shape every consumer sees. The underlying implementation
-// (hooks today, Zustand tomorrow) is hidden behind this boundary.
-
 export type AppState = {
   ui: ReturnType<typeof useUIState>;
   settings: ReturnType<typeof useAISettings>;
   canvas: ReturnType<typeof useCanvasState>;
   usage: ReturnType<typeof useUsageLimit>;
-  /** Combined helper: persist AI settings and close the modal in one call. */
+
   saveSettings: () => void;
 };
 
-// ── Context ───────────────────────────────────────────────────────────────────
-
 const AppStateContext = createContext<AppState | null>(null);
-
-// ── Provider ──────────────────────────────────────────────────────────────────
-// Must render inside <ReactFlowProvider> because useCanvasState calls useReactFlow().
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const ui = useUIState();
@@ -55,8 +46,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     </AppStateContext.Provider>
   );
 }
-
-// ── Consumer hook ─────────────────────────────────────────────────────────────
 
 export function useAppState(): AppState {
   const ctx = useContext(AppStateContext);

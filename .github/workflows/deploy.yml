@@ -18,12 +18,21 @@ jobs:
 
       - name: Install & Build
         run: |
-          npm install
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env
-          echo "VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" >> .env
-          echo "UPSTASH_REDIS_REST_URL=${{ secrets.UPSTASH_REDIS_REST_URL }}" >> .env
-          echo "UPSTASH_REDIS_REST_TOKEN=${{ secrets.UPSTASH_REDIS_REST_TOKEN }}" >> .env
+          npm ci
+          echo "VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" > .env
           npm run build
+
+      - name: Fail if any secret leaked into the bundle
+        run: |
+          if grep -rEq "AIza[A-Za-z0-9_-]{10,}" dist/; then
+            echo "::error::A Google API key was found in the built bundle. Refusing to deploy."
+            exit 1
+          fi
+          if grep -rq "${{ secrets.UPSTASH_REDIS_REST_TOKEN }}" dist/; then
+            echo "::error::The Upstash token was found in the built bundle. Refusing to deploy."
+            exit 1
+          fi
+          echo "No secrets found in dist/."
 
       - name: Copy Files to Server
         uses: appleboy/scp-action@master
@@ -31,9 +40,26 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/*,api/*,services/*"
+          source: "dist/*,api,package.json,package-lock.json,ecosystem.config.cjs"
           target: "/home/jose/uix-agent"
           overwrite: true
+
+      - name: Write server environment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            umask 077
+            cat > /home/jose/uix-agent/.env <<'ENVEOF'
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}
+            UPSTASH_REDIS_REST_URL=${{ secrets.UPSTASH_REDIS_REST_URL }}
+            UPSTASH_REDIS_REST_TOKEN=${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+            NODE_ENV=production
+            ENVEOF
+            chmod 600 /home/jose/uix-agent/.env
 
       - name: SSH and Restart PM2
         uses: appleboy/ssh-action@master
@@ -42,5 +68,19 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
+            cd /home/jose/uix-agent
+            npm ci --omit=dev
+
+            set -a
+            . ./.env
+            set +a
+
             pm2 restart uix-agent
-            pm2 restart uix-api
+
+            pm2 delete uix-api || true
+            pm2 start ecosystem.config.cjs --only uix-api --update-env
+            pm2 save
+
+            sleep 3
+            curl -fsS http://localhost:3001/health

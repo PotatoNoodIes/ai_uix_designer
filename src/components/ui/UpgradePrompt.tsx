@@ -1,73 +1,63 @@
-import React from "react";
 import { UserButton } from "@clerk/clerk-react";
+import { Modal, Button, Micro } from "@/components/primitives";
 
 interface UpgradePromptProps {
   onDismiss: () => void;
 }
 
+const PRO_FEATURES = [
+  "Unlimited generated designs",
+  "Priority generation queue",
+  "Team workspaces and sharing",
+  "Figma export (coming soon)",
+];
+
 export function UpgradePrompt({ onDismiss }: UpgradePromptProps) {
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
-      <div
-        className="brutal-panel w-full max-w-md p-8 flex flex-col gap-6 bg-black"
-        style={{border: '2px solid var(--border)', boxShadow: '8px 8px 0 var(--lime)'}}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <span className="brutal-micro text-lime">LIMIT REACHED</span>
-            <h2 className="brutal-display text-[32px] uppercase">
-              ALL 5 DESIGNS USED
-            </h2>
-            <p className="brutal-micro opacity-70">
-              Upgrade for unlimited designs, priority queue, and team workspaces.
-            </p>
-          </div>
-          <button className="brutal-ghost p-2" onClick={onDismiss}>[X]</button>
+    <Modal title="Limit reached" onClose={onDismiss} className="max-w-md" emphasis>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
+          <h2 className="brutal-display">You've used all five designs</h2>
+          <p className="text-subtle max-w-[46ch] leading-relaxed">
+            Upgrade for unlimited designs, a priority queue, and shared team
+            workspaces.
+          </p>
         </div>
 
-        <ul className="flex flex-col gap-2 p-4 border border-[var(--border)] bg-[#050505]">
-          {[
-            "Unlimited AI-generated designs",
-            "Priority generation queue",
-            "Team workspaces & sharing",
-            "Export to Figma (coming soon)",
-          ].map((f) => (
+        <ul className="flex flex-col gap-2 p-4 border border-hairline bg-sunken">
+          {PRO_FEATURES.map((f) => (
             <li key={f} className="flex items-center gap-3">
-              <span className="text-lime font-mono">»</span>
-              <span className="brutal-micro">{f}</span>
+              <span className="text-acid font-mono" aria-hidden="true">
+                »
+              </span>
+              <Micro>{f}</Micro>
             </li>
           ))}
         </ul>
 
-        <div className="flex flex-col gap-3 mt-2">
-          <button
-            className="brutal-btn w-full bg-lime border-lime text-black"
+        <div className="flex flex-col gap-3">
+          <Button
+            className="w-full"
             onClick={() => {
-              alert("Upgrade flow coming soon!");
+              window.open("mailto:hello@example.com?subject=UIX Agent Pro", "_blank");
             }}
           >
-            UPGRADE TO PRO
-          </button>
-          <button
-            className="brutal-ghost w-full border border-[var(--border)]"
+            Upgrade to Pro
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full border border-hairline py-2"
             onClick={onDismiss}
           >
-            LATER
-          </button>
+            Not now
+          </Button>
         </div>
 
-        <div
-          className="flex items-center gap-3 pt-4 border-t border-[var(--border)]"
-        >
+        <div className="flex items-center gap-3 pt-4 border-t border-hairline">
           <UserButton afterSignOutUrl={window.location.href} />
-          <span className="brutal-micro opacity-50">
-            PRO ACCOUNT ENGINES ENABLED
-          </span>
+          <Micro>Signed in</Micro>
         </div>
       </div>
-
-      <div className="absolute inset-0 -z-10" onClick={onDismiss} />
-    </div>
+    </Modal>
   );
 }

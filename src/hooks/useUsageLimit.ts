@@ -1,6 +1,8 @@
+import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { fetchUsage, onUsageChange, getLatestUsage } from "@/services/aiClient";
+import type { UsageInfo } from "@api/shared/types";
 
-const DEMO_KEY = "demo_usage_count";
 const DEMO_LIMIT = 2;
 const FREE_LIMIT = 5;
 
@@ -18,47 +20,33 @@ export interface UsageLimitResult {
 }
 
 export function useUsageLimit(): UsageLimitResult {
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
+  const [usage, setUsage] = useState<UsageInfo | null>(() => getLatestUsage());
 
-  if (!isLoaded || !isSignedIn) {
-    const used = parseInt(localStorage.getItem(DEMO_KEY) || "0", 10);
-    const isAtLimit = import.meta.env.DEV ? false : used >= DEMO_LIMIT;
+  useEffect(() => onUsageChange(setUsage), []);
 
-    const incrementUsage = async () => {
-      const next = used + 1;
-      localStorage.setItem(DEMO_KEY, String(next));
-    };
+  useEffect(() => {
+    if (!isLoaded) return;
+    void fetchUsage();
+  }, [isLoaded, isSignedIn]);
 
-    return {
-      canGenerate: !isAtLimit,
-      isAtLimit,
-      limitType: isAtLimit ? "demo" : null,
-      usageLabel: `${used} of ${DEMO_LIMIT} free`,
-      used,
-      limit: DEMO_LIMIT,
-      incrementUsage,
-      isSignedIn: false,
-    };
-  }
+  const incrementUsage = useCallback(async () => {
+    await fetchUsage();
+  }, []);
 
-  const meta = (user.unsafeMetadata as { design_count?: number }) ?? {};
-  const used = typeof meta.design_count === "number" ? meta.design_count : 0;
-  const isAtLimit = import.meta.env.DEV ? false : used >= FREE_LIMIT;
-
-  const incrementUsage = async () => {
-    await user.update({
-      unsafeMetadata: { ...user.unsafeMetadata, design_count: used + 1 },
-    });
-  };
+  const signedIn = Boolean(isSignedIn);
+  const limit = usage?.limit ?? (signedIn ? FREE_LIMIT : DEMO_LIMIT);
+  const used = usage?.used ?? 0;
+  const isAtLimit = used >= limit;
 
   return {
     canGenerate: !isAtLimit,
     isAtLimit,
-    limitType: isAtLimit ? "free" : null,
-    usageLabel: `${used} of ${FREE_LIMIT} used`,
+    limitType: isAtLimit ? (signedIn ? "free" : "demo") : null,
+    usageLabel: signedIn ? `${used} of ${limit} used` : `${used} of ${limit} free`,
     used,
-    limit: FREE_LIMIT,
+    limit,
     incrementUsage,
-    isSignedIn: true,
+    isSignedIn: signedIn,
   };
 }

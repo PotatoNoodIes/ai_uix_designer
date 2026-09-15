@@ -5,6 +5,7 @@ import { useAppState } from "@/context/AppStateContext";
 import { SignInNudge } from "@/components/ui/SignInNudge";
 import { UpgradePrompt } from "@/components/ui/UpgradePrompt";
 import { Toast } from "@/components/ui/Toast";
+import { Logo } from "@/components/primitives";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { Toolbar } from "@/components/layout/Toolbar";
@@ -80,12 +81,7 @@ export function Canvas() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden bg-black text-white">
-      <style>{`
-        .modal-backdrop { backdrop-filter: blur(10px); background: rgba(0,0,0,0.65); }
-        .chat-scroll::-webkit-scrollbar { width: 0; }
-      `}</style>
-
+    <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden bg-canvas text-ink">
       {notification && <Toast notification={notification} />}
 
       {isSettingsOpen && (
@@ -112,18 +108,11 @@ export function Canvas() {
       />
 
       <div className={`
-        md:w-[500px] md:h-full md:flex md:flex-col md:border-r md:border-[var(--border)] md:bg-[#050505] md:z-[5000] md:shrink-0
-        ${mobilePanel === "chat" ? "flex flex-col flex-1 min-h-0 bg-[#050505] z-[5000]" : "hidden md:flex md:flex-col"}
+        md:w-[500px] md:h-full md:flex md:flex-col md:border-r md:border-hairline md:bg-sunken md:z-sidebar md:shrink-0
+        ${mobilePanel === "chat" ? "flex flex-col flex-1 min-h-0 bg-sunken z-sidebar" : "hidden md:flex md:flex-col"}
       `}>
         <div className="hidden md:flex p-8 flex-col gap-6 w-full shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-lime flex items-center justify-center p-0.5" style={{boxShadow:'2px 2px 0 var(--border)'}}>
-              <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="brutal-display text-[24px]">UIX</div>
-          </div>
+          <Logo />
           <Toolbar
             currentProject={currentProject}
             usage={usage}
@@ -176,8 +165,7 @@ export function Canvas() {
       <main className={`
         flex-1 relative z-0
         ${mobilePanel === "canvas" ? "flex flex-col" : "hidden md:block"}
-      `} style={{background:'var(--canvas-bg)'}}>
-
+      `}>
         <CanvasNav
           currentProject={currentProject}
           currentBreakpoint={currentBreakpoint}

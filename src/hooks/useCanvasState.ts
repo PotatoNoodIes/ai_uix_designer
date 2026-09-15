@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { UsageLimitError } from "@/services/aiClient";
 import { useNodesState, useEdgesState, useReactFlow } from "reactflow";
 import JSZip from "jszip";
 import {
@@ -71,12 +72,10 @@ export function useCanvasState({
   const didInitialLayout = useRef(false);
   const isAiBusy = isGenerating || isGeneratingNewScreen || isModifying;
 
-
   useEffect(() => {
     const savedProjects = localStorage.getItem("stitch_v3_projects");
     if (savedProjects) setProjects(JSON.parse(savedProjects));
   }, []);
-
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -254,6 +253,16 @@ export function useCanvasState({
     [pushToHistory]
   );
 
+  const handleAiError = (err: any, fallback: string) => {
+    if (err instanceof UsageLimitError) {
+      if (err.limitType === "free") setShowUpgrade(true);
+      else setShowNudge(true);
+      void usage.incrementUsage();
+      return;
+    }
+    showError(err?.message || fallback);
+  };
+
   const handleGenerate = async () => {
     if (!usage.canGenerate) {
       if (usage.isSignedIn) setShowUpgrade(true);
@@ -323,7 +332,7 @@ export function useCanvasState({
       setMobilePanel("canvas");
       await usage.incrementUsage();
     } catch (err: any) {
-      showError(err.message || "UIX failed. Please check your API key or connection.");
+      handleAiError(err, "UIX failed. Please check your connection.");
     } finally {
       setIsGenerating(false);
       releaseAiLock();
@@ -377,7 +386,7 @@ export function useCanvasState({
       setModifyInput("");
       showSuccess("Screen refined successfully");
     } catch (err: any) {
-      showError(err.message || "Refinement failed.");
+      handleAiError(err, "Refinement failed.");
     } finally {
       setIsModifying(false);
       releaseAiLock();
@@ -438,7 +447,7 @@ export function useCanvasState({
       fitView({ nodes: [{ id: newScreen.id }], padding: 0.4, duration: 700 });
       showSuccess("New screen synthesized");
     } catch (err: any) {
-      showError(err.message || "Generation failed.");
+      handleAiError(err, "Generation failed.");
     } finally {
       setIsGeneratingNewScreen(false);
       releaseAiLock();
@@ -546,16 +555,15 @@ export function useCanvasState({
   };
 
   return {
-    // ReactFlow
     nodes, edges, onNodesChange, onEdgesChange,
     zoomIn, zoomOut, fitView,
-    // Project state
+
     projects, setProjects,
     currentProject, setCurrentProject,
     messages, setMessages,
     referenceAssets,
     past, future,
-    // AI / generate state
+
     isGenerating, isAiBusy,
     input, setInput,
     modifyInput, setModifyInput,
@@ -563,10 +571,10 @@ export function useCanvasState({
     isAddingScreen, setIsAddingScreen,
     newScreenPrompt, setNewScreenPrompt,
     isGeneratingNewScreen,
-    // Canvas state
+
     currentBreakpoint, setCurrentBreakpoint,
     activeLiveScreens,
-    // Handlers
+
     undo, redo,
     handleSaveSnapshot,
     handleGenerate,

@@ -1,13 +1,14 @@
-import React from "react";
 import { Background, BackgroundVariant } from "reactflow";
+
+const GRID_SIZE = 40;
 
 export function GridLayer({ theme }: { theme: "dark" | "light" }) {
   return (
     <Background
       variant={BackgroundVariant.Dots}
-      gap={24}
+      gap={GRID_SIZE}
       size={1}
-      color={theme === "dark" ? "#1a2033" : "#d1d5db"}
+      color={theme === "dark" ? "#2e2e2e" : "#d1d5db"}
     />
   );
 }
