@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start:api": "tsx api/server.ts",
-    "test": "tsx test/quota.test.ts"
+    "test": "tsx test/redact.test.ts && tsx test/quota.test.ts && tsx test/stream.test.ts && tsx test/e2e-stream.test.ts"
   },
   "dependencies": {
     "@clerk/backend": "^1.21.6",

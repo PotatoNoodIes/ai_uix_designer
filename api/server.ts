@@ -29,7 +29,32 @@ if (typeof Bun !== "undefined") {
 
     nodeRes.statusCode = res.status;
     res.headers.forEach((value, key) => nodeRes.setHeader(key, value));
-    nodeRes.end(Buffer.from(await res.arrayBuffer()));
+
+    if (!res.body) {
+      nodeRes.end();
+      return;
+    }
+
+    nodeRes.flushHeaders();
+
+    const reader = res.body.getReader();
+    let cancelled = false;
+    nodeRes.on("close", () => {
+      cancelled = true;
+      reader.cancel().catch(() => {});
+    });
+
+    try {
+      while (!cancelled) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        nodeRes.write(Buffer.from(value));
+      }
+    } catch (err) {
+      console.error("[api] stream error:", err);
+    } finally {
+      nodeRes.end();
+    }
   }).listen(PORT, () => {
     console.log(`[api] listening on port ${PORT} (node)`);
   });

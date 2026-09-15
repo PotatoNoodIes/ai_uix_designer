@@ -1,4 +1,4 @@
-import { callGemini, type GeminiPart } from "../lib/gemini.ts";
+import { callGemini, ProviderError, type GeminiPart } from "../lib/gemini.ts";
 import { getUserId } from "../lib/clerk.ts";
 import {
   consumeQuota,
@@ -6,6 +6,7 @@ import {
   getClientIp,
   type QuotaIdentity,
 } from "../lib/quota.ts";
+import { redact } from "../lib/redact.ts";
 import { resolveServerModel } from "../shared/models.ts";
 import {
   buildProductPrompt,
@@ -21,6 +22,7 @@ import type { GenerateRequest } from "../shared/types.ts";
 
 const MAX_REFERENCE_IMAGES = 4;
 const MAX_PROMPT_CHARS = 8000;
+const HEARTBEAT_MS = Number(process.env.GENERATE_HEARTBEAT_MS ?? 10_000);
 
 function badRequest(message: string) {
   return Response.json({ error: message }, { status: 400 });
@@ -145,27 +147,61 @@ export async function handleGenerate(req: Request): Promise<Response> {
     }
   }
 
-  try {
-    const text = await callGemini({
-      systemInstruction,
-      userPrompt,
-      responseSchema,
-      model,
-      referenceParts,
-    });
+  const encoder = new TextEncoder();
 
-    return Response.json({
-      result: JSON.parse(text),
-      usage: quota
-        ? { used: quota.used, limit: quota.limit, isSignedIn: quota.isSignedIn }
-        : null,
-    });
-  } catch (err) {
-    if (quota) await refundQuota(identity);
-    console.error("[generate] generation failed:", err);
-    return Response.json(
-      { error: "Generation failed. Please try again." },
-      { status: 502 }
-    );
-  }
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (chunk: string) => {
+        try {
+          controller.enqueue(encoder.encode(chunk));
+        } catch {
+        }
+      };
+
+      send(": open\n\n");
+      const heartbeat = setInterval(() => send(": keepalive\n\n"), HEARTBEAT_MS);
+
+      try {
+        const text = await callGemini({
+          systemInstruction,
+          userPrompt,
+          responseSchema,
+          model,
+          referenceParts,
+        });
+
+        send(
+          `data: ${JSON.stringify({
+            result: JSON.parse(text),
+            usage: quota
+              ? { used: quota.used, limit: quota.limit, isSignedIn: quota.isSignedIn }
+              : null,
+          })}\n\n`
+        );
+      } catch (err) {
+        if (quota) await refundQuota(identity);
+        const message =
+          err instanceof ProviderError ? err.safeMessage : "Generation failed. Please try again.";
+        if (!(err instanceof ProviderError)) {
+          console.error("[generate] generation failed:", redact(err));
+        }
+        send(`data: ${JSON.stringify({ error: message })}\n\n`);
+      } finally {
+        clearInterval(heartbeat);
+        try {
+          controller.close();
+        } catch {
+        }
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }
