@@ -70,6 +70,18 @@ jobs:
           script: |
             set -e
             cd /home/jose/uix-agent
+
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
+            echo "node $(node -v) / npm $(npm -v)"
+            if [ "$NODE_MAJOR" -lt 20 ]; then
+              echo "::error::Server node is $(node -v); @google/genai requires >= 20."
+              exit 1
+            fi
+            export NODE_BIN="$(command -v node)"
+
             npm ci --omit=dev
 
             set -a
@@ -82,5 +94,18 @@ jobs:
             pm2 start ecosystem.config.cjs --only uix-api --update-env
             pm2 save
 
-            sleep 3
-            curl -fsS http://localhost:3001/health
+            for i in $(seq 1 15); do
+              BODY=$(curl -fsS http://localhost:3001/health 2>/dev/null) && break || true
+              sleep 2
+            done
+
+            if [ -z "$BODY" ]; then
+              echo "::error::uix-api did not become healthy."
+              curl -s -o /dev/null -w 'final status: %{http_code}\n' http://localhost:3001/health || true
+              curl -s http://localhost:3001/health || true
+              echo "--- pm2 logs ---"
+              pm2 logs uix-api --lines 40 --nostream || true
+              exit 1
+            fi
+
+            echo "healthy: $BODY"

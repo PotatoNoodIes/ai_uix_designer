@@ -20,12 +20,18 @@ function redis(): Redis {
   return client;
 }
 
-export async function redisOk(): Promise<boolean> {
+export type RedisStatus = "ok" | "unconfigured" | "unreachable";
+
+export async function redisStatus(): Promise<RedisStatus> {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return "unconfigured";
+  }
   try {
     await redis().get("healthcheck");
-    return true;
-  } catch {
-    return false;
+    return "ok";
+  } catch (err) {
+    console.error("[quota] redis unreachable:", (err as Error).message);
+    return "unreachable";
   }
 }
 

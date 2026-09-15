@@ -1,7 +1,7 @@
 import { handleGenerate } from "./routes/generate.ts";
 import { handleDemoCheck } from "./routes/demo-check.ts";
 import { handleUsage } from "./routes/usage.ts";
-import { redisOk } from "./lib/quota.ts";
+import { redisStatus } from "./lib/quota.ts";
 
 type Handler = (req: Request) => Promise<Response>;
 
@@ -17,15 +17,15 @@ export async function handleRequest(req: Request): Promise<Response> {
   const path = pathname.replace(/^\/uix\/api/, "").replace(/^\/api/, "") || "/";
 
   if (path === "/health") {
-    const redis = await redisOk();
+    const redis = await redisStatus();
     return Response.json(
       {
-        ok: redis,
+        ok: redis === "ok",
         redis,
         gemini: Boolean(process.env.GEMINI_API_KEY),
         clerk: Boolean(process.env.CLERK_SECRET_KEY),
       },
-      { status: redis ? 200 : 503 }
+      { status: redis === "ok" ? 200 : 503 }
     );
   }
 
